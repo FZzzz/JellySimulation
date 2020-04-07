@@ -211,7 +211,7 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 	
 	//CreateMonkeys(10000, OBJECT_FLAG_ENUM::OBJECT_STATIC);
 	{
-		const unsigned int jelly_dim = 8;
+		constexpr unsigned int jelly_dim = 16;
 		const float particle_mass = 0.05f;
 		std::shared_ptr<Jelly> jelly = GenerateJelly(jelly_dim, particle_mass);
 #ifdef _DEBUG
@@ -334,7 +334,7 @@ std::shared_ptr<Jelly> GLFWApp::GenerateJelly(unsigned int n, float mass)
 		{
 			for (unsigned int x = 0; x < n; x++)
 			{
-				size_t idx = z * n*n + y * n + x;
+				//size_t idx = z * n*n + y * n + x;
 				float t_x = -1.0f + step * static_cast<float>(x);
 				float t_y = -1.0f + step * static_cast<float>(y);
 				float t_z = -1.0f + step * static_cast<float>(z);

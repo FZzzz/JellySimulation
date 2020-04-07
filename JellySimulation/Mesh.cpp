@@ -352,7 +352,7 @@ void Mesh::UpdatePositions()
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbo[0]);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)* m_positions.size(),
-			m_positions.data(), GL_DYNAMIC_DRAW);
+			m_positions.data(), GL_STATIC_DRAW);
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	}
@@ -367,7 +367,7 @@ void Mesh::UpdateNormals()
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbo[1]);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)* m_normals.size(),
-			m_normals.data(), GL_DYNAMIC_DRAW);
+			m_normals.data(), GL_STATIC_DRAW);
 		glEnableVertexAttribArray(1);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	}
@@ -381,7 +381,7 @@ void Mesh::UpdateTextcoords()
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbo[2]);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)* m_texcoord.size(),
-			m_texcoord.data(), GL_DYNAMIC_DRAW);
+			m_texcoord.data(), GL_STATIC_DRAW);
 		glEnableVertexAttribArray(2);
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	}
