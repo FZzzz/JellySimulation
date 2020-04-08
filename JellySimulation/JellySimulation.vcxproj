@@ -24,6 +24,8 @@
     <ClCompile Include="AnimCharacter.cpp" />
     <ClCompile Include="AssetImporter.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Constraints.cpp" />
+    <ClCompile Include="ConstraintSolver.cpp" />
     <ClCompile Include="Cube.cpp" />
     <ClCompile Include="Floor.cpp" />
     <ClCompile Include="GameObject.cpp" />
@@ -51,6 +53,8 @@
     <ClInclude Include="AssetImporter.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="common.h" />
+    <ClInclude Include="Constraints.h" />
+    <ClInclude Include="ConstraintSolver.h" />
     <ClInclude Include="Cube.h" />
     <ClInclude Include="Floor.h" />
     <ClInclude Include="GameObject.h" />

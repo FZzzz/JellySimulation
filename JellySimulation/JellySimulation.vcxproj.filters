@@ -73,6 +73,10 @@
     <ClCompile Include="Particle.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="Constraints.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="ConstraintSolver.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imconfig.h">
@@ -156,6 +160,10 @@
     <ClInclude Include="GLFWApp.h">
       <Filter>Header</Filter>
     </ClInclude>
+    <ClInclude Include="Constraints.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="ConstraintSolver.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

@@ -4,7 +4,9 @@
 #include <vector>
 #include "Mesh.h"
 #include "Particle.h"
-// A sping connect two particles
+
+
+// forward declaration
 struct Spring;
 class Jelly;
 
@@ -17,10 +19,12 @@ struct Spring
 	float k;
 	Particle_Ptr p0;
 	Particle_Ptr p1;
-
 };
 
 
+/**
+ * A jelly is represented by mass-spring system.
+ */
 class Jelly
 {
 public:
@@ -49,7 +53,7 @@ private:
 	size_t						m_num_of_particles;
 	// Buffer in Jelly class for faster update
 	// TODO: Change to SOA (Structure of Array)
-	// Or find a way use pointer to manage these
+	// Or find a way using pointer to manage these
 	std::vector<glm::vec3>		m_positions;
 
 	/*Springs*/
