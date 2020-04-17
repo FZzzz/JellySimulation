@@ -76,7 +76,13 @@
     <ClCompile Include="Constraints.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="ConstraintSolver.cpp" />
+    <ClCompile Include="ConstraintSolver.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulation.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Collider.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imconfig.h">
@@ -163,7 +169,13 @@
     <ClInclude Include="Constraints.h">
       <Filter>Header</Filter>
     </ClInclude>
-    <ClInclude Include="ConstraintSolver.h" />
+    <ClInclude Include="ConstraintSolver.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Simulation.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Collider.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

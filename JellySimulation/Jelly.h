@@ -47,14 +47,18 @@ private:
 	// Refresh GPU vertex buffer data (positions) 
 	void UpdateVBO();
 
+	/*Basic properties*/
+	std::vector<glm::vec3>		m_positions;
+
 	/*Particles*/
 	void UpdateParticlePositions();
+
 	std::vector<std::vector<std::vector<Particle_Ptr>>>	m_particles;
 	size_t						m_num_of_particles;
 	// Buffer in Jelly class for faster update
 	// TODO: Change to SOA (Structure of Array)
 	// Or find a way using pointer to manage these
-	std::vector<glm::vec3>		m_positions;
+
 
 	/*Springs*/
 	std::vector<Spring_Ptr>		m_shear_springs;

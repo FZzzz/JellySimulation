@@ -13,13 +13,15 @@ struct ParticleData
 		position(pos), 
 		velocity(glm::vec3(0)),
 		force(glm::vec3(0)),
-		mass(m)
+		mass(m),
+		massInv(1.f/mass)
 	{
 	}
 	glm::vec3	position;
 	glm::vec3	velocity;
 	glm::vec3	force;
 	float		mass;
+	float		massInv;
 };
 
 class Particle

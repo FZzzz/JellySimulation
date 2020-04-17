@@ -11,9 +11,14 @@ class ConstraintSolver
 public:
 	ConstraintSolver();
 	~ConstraintSolver();
-
 	
 	bool SolvePBDConstraints();
+
+	/*
+	TODO: Decompose these functions. Constraint sovler should not record constrains
+	*/
+	void AddStaticConstraint(Constraint* constraint);
+	void AddCollisionConstraint(Constraint* constraint);
 
 	// setter
 	void setSolverIteration(uint32_t iteration_num);

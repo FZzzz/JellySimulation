@@ -50,6 +50,9 @@ GLFWApp::~GLFWApp()
 
 bool GLFWApp::Initialize(int width , int height , const std::string &title)
 {
+	const float f_width = static_cast<float>(width);
+	const float f_height = static_cast<float>(height);
+
 	if (!glfwInit())
 	{
 		return false;
@@ -61,6 +64,7 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 	glfwWindowHint(GLFW_SAMPLES, 4);
 
+	/* Setting GLFW window */
 	m_window = glfwCreateWindow(width, height, title.c_str() , NULL , NULL);
 	
 	if (!m_window)
@@ -70,7 +74,6 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 	}
 
 	glfwSetWindowPos(m_window, 100, 100);
-
 	glfwMakeContextCurrent(m_window);
 	glfwSetKeyCallback(m_window, Key_callback);
 	glfwSwapInterval(0);
@@ -88,15 +91,13 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	/*
-		ResourceManager Creation
-	*/
+	/* ResourceManager Creation */
 	m_resource_manager = std::make_shared<ResourceManager>();
+
+	/* Simulator creation */
+	m_simulator = std::make_shared<Simulation>();
 	
-	const float f_width = static_cast<float>(width);
-	const float f_height = static_cast<float>(height);
-	
-	// Shader
+	// ShowdowMapping shader settings
 	std::shared_ptr<Shader> shader = std::make_shared<Shader>("ShadowMapping");
 	shader->SetupShader("resources/shader/shadow_mapping_vs_adv.glsl",
 		"resources/shader/shadow_mapping_fs.glsl");
@@ -573,10 +574,16 @@ void GLFWApp::Render()
 
 void GLFWApp::Update()
 {
-	m_previousTime = m_currentTime;
-	m_currentTime = static_cast<float>(glfwGetTime());
 	auto anim_characters = m_resource_manager->getAnimCharacters();
 	auto jellies = m_resource_manager->getJellies();
+
+	m_previousTime = m_currentTime;
+	m_currentTime = static_cast<float>(glfwGetTime());
+	
+	float dt = m_currentTime - m_previousTime;
+
+	m_simulator->Step(dt);
+
 	for (auto it = anim_characters.cbegin(); it != anim_characters.cend(); ++it)
 	{
 		(*it)->Update();

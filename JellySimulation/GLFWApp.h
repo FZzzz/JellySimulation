@@ -16,6 +16,7 @@
 #include "AssetImporter.h"
 #include "GUIManager.h"
 #include "Jelly.h"
+#include "Simulation.h"
 
 class GLFWApp
 {
@@ -74,6 +75,9 @@ private:
 	
 	/* Timer */
 	std::chrono::high_resolution_clock::time_point t0, t1, t2, t3, t4;
+
+	/*Simulation*/
+	std::shared_ptr<Simulation> m_simulator;
 
 	/*Others*/
 	std::shared_ptr<AnimCharacter> m_anim_character;

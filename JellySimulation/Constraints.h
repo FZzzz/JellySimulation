@@ -15,22 +15,24 @@ class Constraint
 {
 public:
 
+	// Constraint caches particles but not owning it
 	std::vector<Particle*> m_particles;
 	
+	Constraint() = delete;
 	Constraint(size_t numOfRigidbodies);
 	~Constraint();
 
 	virtual bool SolveConstraint() = 0;
 	
 	virtual float ConstraintFunction() = 0;
-	virtual glm::vec3 GradientFunction() = 0;
+	virtual std::vector<std::vector<float>> GradientFunction() = 0;
 	
 	// getter
 	virtual CONSTRAINT_TYPE getConstraintType() = 0;
 
 };
 
-class DistanceConstraint: public Constraint
+class DistanceConstraint final: public Constraint
 {
 public:
 	
@@ -41,15 +43,25 @@ public:
 	 * @param p2 Second paritcle
 	 * @param d  Initial distance of two particle
 	 */
-	DistanceConstraint(Particle* p1, Particle* p2, float d);
+	DistanceConstraint(Particle* p0, Particle* p1, float d);
 	~DistanceConstraint();
+
+	virtual bool SolveConstraint();
+
+	virtual float ConstraintFunction();
+	virtual std::vector<std::vector<float>> GradientFunction();
 
 	CONSTRAINT_TYPE getConstraintType() { return CONSTRAINT_TYPE::CONSTRAINT_DISTANCE; };
 
+private: 
+
+	// stiffness is the value between 0-1
+	float m_stiffness;
+	float m_rest_length;
 };
 
 
-class BendConstraint : public Constraint
+class BendConstraint final: public Constraint
 {
 public:
 	
@@ -62,6 +74,11 @@ public:
 	 */
 	BendConstraint(Particle* p1, Particle* p2, float d);
 	~BendConstraint();
+
+	virtual bool SolveConstraint();
+
+	virtual float ConstraintFunction();
+	virtual std::vector<std::vector<float>> GradientFunction();
 
 	CONSTRAINT_TYPE getConstraintType() { return CONSTRAINT_TYPE::CONSTRAINT_BEND; };
 
