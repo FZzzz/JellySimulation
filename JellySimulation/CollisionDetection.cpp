@@ -2,7 +2,11 @@
 
 bool CollisionDetection::PointSphereIntersection(PointCollider* point, SphereCollider* sphere)
 {
-	return false;
+	const glm::vec3& point_pos = point->m_position;
+	const glm::vec3  v = point_pos - sphere->m_center;
+	const float		 radius2 = sphere->m_radius * sphere->m_radius;
+
+	return (glm::dot(v,v) <= radius2);
 }
 
 bool CollisionDetection::PointAABBIntersection(PointCollider* point, AABB* aabb)
@@ -16,32 +20,68 @@ bool CollisionDetection::PointAABBIntersection(PointCollider* point, AABB* aabb)
 
 bool CollisionDetection::PointOBBIntersection(PointCollider* point, OBB* obb)
 {
-	return false;
+	const glm::vec3& point_pos = point->m_position;
+	const glm::vec3 v = point_pos - obb->m_center;
+	   
+	return (glm::abs(glm::dot(v, obb->m_local_axis[0])) <= obb->m_extend &&
+			glm::abs(glm::dot(v, obb->m_local_axis[0])) <= obb->m_extend &&
+			glm::abs(glm::dot(v, obb->m_local_axis[0])) <= obb->m_extend);
 }
 
 bool CollisionDetection::PointPlaneIntersection(PointCollider* point, Plane* plane)
 {
-	return false;
+	const glm::vec3& point_pos = point->m_position;
+	const float		 d2 = plane->m_d * plane->m_d;
+
+	return glm::abs(glm::dot(plane->m_normal, point_pos)) <= d2;
+}
+
+bool CollisionDetection::PointPlaneIntersection(glm::vec3 p, Plane* plane)
+{
+	const float d2 = plane->m_d * plane->m_d;
+
+	return glm::abs(glm::dot(plane->m_normal, p)) <= d2;
 }
 
 bool CollisionDetection::SphereSphereIntersection(SphereCollider* sphere0, SphereCollider* sphere1)
 {
-	return false;
+	const glm::vec3& center0 = sphere0->m_center;
+	const glm::vec3& center1 = sphere1->m_center;
+	const float&	 radius0 = sphere0->m_radius;
+	const float&	 radius1 = sphere1->m_radius;
+	const float		 dist2 = glm::dot(center0 - center1, center0 - center1);
+	const float		 r_sum = radius0 + radius1;
+
+	return dist2 <= (r_sum * r_sum);
 }
 
 bool CollisionDetection::SphereAABBIntersection(SphereCollider* sphere, AABB* aabb)
 {
-	return false;
+	const glm::vec3& center = sphere->m_center;
+	const float& r = sphere->m_radius;
+
+	/*Get closest AABB point to sphere center*/
+	float x = glm::max(aabb->m_min.x, glm::min(center.x, aabb->m_max.x));
+	float y = glm::max(aabb->m_min.y, glm::min(center.y, aabb->m_max.y));
+	float z = glm::max(aabb->m_min.z, glm::min(center.z, aabb->m_max.z));
+
+	glm::vec3 v = center - glm::vec3(x, y, z);
+
+	return (glm::dot(v, v) <= r);
 }
 
 bool CollisionDetection::SphereOBBIntersection(SphereCollider* sphere, OBB* obb)
 {
+	
 	return false;
 }
 
 bool CollisionDetection::SpherePlaneIntersection(SphereCollider* sphere, Plane* plane)
 {
-	return false;
+	const glm::vec3& center = sphere->m_center;
+	float d_sum = sphere->m_radius + plane->m_d;
+
+	return glm::dot(center, plane->m_normal) <= (d_sum*d_sum);
 }
 
 bool CollisionDetection::AABBOBBIntersection(AABB* aabb, OBB* obb)
@@ -51,12 +91,28 @@ bool CollisionDetection::AABBOBBIntersection(AABB* aabb, OBB* obb)
 
 bool CollisionDetection::AABBAABBIntersection(AABB* box0, AABB* box1)
 {
+	if (box0->m_max.x < box1->m_min.x || box0->m_min.x > box1->m_max.x)  return false;
+	if (box0->m_max.y < box1->m_min.y || box0->m_min.y > box1->m_max.y)  return false;
+	if (box0->m_max.z < box1->m_min.z || box0->m_min.z > box1->m_max.z)  return false;
+	
 	return false;
 }
 
 bool CollisionDetection::AABBPlaneIntersection(AABB* aabb, Plane* plane)
 {
-	return false;
+	const glm::vec3& min = aabb->m_min;
+	const glm::vec3& max = aabb->m_max;
+		
+	return (
+		PointPlaneIntersection(glm::vec3(min.x, min.y, min.z), plane) ||
+		PointPlaneIntersection(glm::vec3(max.x, min.y, min.z), plane) ||
+		PointPlaneIntersection(glm::vec3(min.x, max.y, min.z), plane) ||
+		PointPlaneIntersection(glm::vec3(max.x, max.y, min.z), plane) ||
+		PointPlaneIntersection(glm::vec3(min.x, min.y, max.z), plane) ||
+		PointPlaneIntersection(glm::vec3(max.x, min.y, max.z), plane) ||
+		PointPlaneIntersection(glm::vec3(min.x, max.y, max.z), plane) ||
+		PointPlaneIntersection(glm::vec3(max.x, max.y, max.z), plane)
+		);
 }
 
 bool CollisionDetection::OBBOBBIntersection(OBB* box0, OBB* box1)

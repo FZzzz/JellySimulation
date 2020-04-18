@@ -82,7 +82,12 @@
     <ClCompile Include="Simulation.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="Collider.cpp" />
+    <ClCompile Include="Collider.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="CollisionDetection.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imconfig.h">
@@ -175,7 +180,12 @@
     <ClInclude Include="Simulation.h">
       <Filter>Header</Filter>
     </ClInclude>
-    <ClInclude Include="Collider.h" />
+    <ClInclude Include="Collider.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="CollisionDetection.h">
+      <Filter>Header</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

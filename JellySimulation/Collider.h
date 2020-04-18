@@ -83,7 +83,7 @@ public:
 		glm::vec3 local_x_axis,
 		glm::vec3 local_y_axis,
 		glm::vec3 local_z_axis,
-		glm::vec3 extend);
+		float extend);
 	~OBB();
 
 	virtual void UpdateCollider();
@@ -91,7 +91,7 @@ public:
 
 	glm::vec3 m_center;
 	glm::vec3 m_local_axis[3];
-	glm::vec3 m_extend;
+	float m_extend;
 
 };
 
@@ -99,11 +99,11 @@ class Plane final : public Collider
 {
 public:
 	Plane() = delete;
-	Plane(glm::vec3 plane_normal, float d);
+	Plane(glm::vec3 plane_normal, float distance_from_orgin);
 	~Plane();
 
 	glm::vec3 m_normal;
-	glm::vec3 m_d;
+	float m_d;
 
 };
 

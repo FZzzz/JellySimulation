@@ -87,7 +87,7 @@ bool AABB::TestCollision(Collider* other)
 	return result;
 }
 
-OBB::OBB(glm::vec3 center, glm::vec3 local_x_axis, glm::vec3 local_y_axis, glm::vec3 local_z_axis, glm::vec3 extend)
+OBB::OBB(glm::vec3 center, glm::vec3 local_x_axis, glm::vec3 local_y_axis, glm::vec3 local_z_axis, float extend)
 	: Collider(ColliderTypes::OBB),
 	m_local_axis{local_x_axis, local_y_axis, local_z_axis},
 	m_extend(extend)

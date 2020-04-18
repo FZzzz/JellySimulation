@@ -37,7 +37,7 @@ void Simulation::CollisionDetection()
 		for(size_t j = 0; j < m_colliders.size(); ++j)
 		{
 			 if(i==j) continue;
-			 bool contact = TestCollision(m_colliders[i], m_colliders[j]);
+			 bool contact = m_colliders[i]->TestCollision(, m_colliders[j]);
 			 if(contact) 
 				GenerateCollisionPair();
 		}

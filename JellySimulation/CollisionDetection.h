@@ -17,13 +17,17 @@ namespace CollisionDetection
 	bool PointAABBIntersection(PointCollider* point, AABB* aabb);
 	bool PointOBBIntersection(PointCollider* point, OBB* obb);
 	bool PointPlaneIntersection(PointCollider* point, Plane* plane);
+	bool PointPlaneIntersection(glm::vec3 p, Plane* plane);
+	
 	bool SphereSphereIntersection(SphereCollider* sphere0, SphereCollider* sphere1);
 	bool SphereAABBIntersection(SphereCollider* sphere, AABB* aabb);
 	bool SphereOBBIntersection(SphereCollider* sphere, OBB* obb);
 	bool SpherePlaneIntersection(SphereCollider* sphere, Plane* plane);
-	bool AABBOBBIntersection(AABB* aabb, OBB* obb);
+	
 	bool AABBAABBIntersection(AABB* box0, AABB* box1);
+	bool AABBOBBIntersection(AABB* aabb, OBB* obb);
 	bool AABBPlaneIntersection(AABB* aabb, Plane* plane);
+	
 	bool OBBOBBIntersection(OBB* box0, OBB* box1);
 };
 
