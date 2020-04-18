@@ -11,7 +11,8 @@ public:
 		POINT = 0,
 		SPHERE,
 		AABB,
-		OBB
+		OBB,
+		PLANE
 	};
 
 	Collider() = delete;
@@ -40,8 +41,7 @@ public:
 
 	virtual void UpdateCollider();
 	virtual bool TestCollision(Collider* other);
-
-private:
+	
 	glm::vec3 m_position;
 };
 
@@ -55,7 +55,6 @@ public:
 	virtual void UpdateCollider();
 	virtual bool TestCollision(Collider* collider);
 
-private:
 	glm::vec3 m_center;
 	float	  m_radius;
 
@@ -71,7 +70,6 @@ public:
 	virtual void UpdateCollider();
 	virtual bool TestCollision(Collider* other);
 
-private:
 	glm::vec3 m_min;
 	glm::vec3 m_max;
 
@@ -91,10 +89,21 @@ public:
 	virtual void UpdateCollider();
 	virtual bool TestCollision(Collider* other);
 
-private:
 	glm::vec3 m_center;
 	glm::vec3 m_local_axis[3];
 	glm::vec3 m_extend;
+
+};
+
+class Plane final : public Collider
+{
+public:
+	Plane() = delete;
+	Plane(glm::vec3 plane_normal, float d);
+	~Plane();
+
+	glm::vec3 m_normal;
+	glm::vec3 m_d;
 
 };
 
