@@ -51,6 +51,10 @@ public:
 	virtual float ConstraintFunction();
 	virtual std::vector<std::vector<float>> GradientFunction();
 
+	// setters
+	void setStiffness(float stiffness);
+
+	// getters
 	CONSTRAINT_TYPE getConstraintType() { return CONSTRAINT_TYPE::CONSTRAINT_DISTANCE; };
 
 private: 

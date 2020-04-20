@@ -12,14 +12,15 @@ public:
 	ConstraintSolver();
 	~ConstraintSolver();
 	
-	bool SolvePBDConstraints();
+	bool SolvePBDConstraints(
+		std::vector<Constraint*>& static_constraints, 
+		std::vector<Constraint*>& collision_constraints
+	);
 
 	/*
 	TODO: Decompose these functions. Constraint sovler should not record constrains
 	*/
-	void AddStaticConstraint(Constraint* constraint);
-	void AddCollisionConstraint(Constraint* constraint);
-
+	
 	// setter
 	void setSolverIteration(uint32_t iteration_num);
 
@@ -29,8 +30,6 @@ public:
 private:
 
 	uint32_t m_solver_iteration;
-	std::vector<Constraint*> m_static_constraints;
-	std::vector<Constraint*> m_collision_constraints;
 
 
 };

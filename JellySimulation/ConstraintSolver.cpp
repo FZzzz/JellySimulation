@@ -7,13 +7,6 @@ ConstraintSolver::ConstraintSolver()
 
 ConstraintSolver::~ConstraintSolver()
 {
-	for (size_t i = 0; i < m_static_constraints.size(); ++i)
-		m_static_constraints[i] = nullptr;
-	for (size_t i = 0; i < m_collision_constraints.size(); ++i)
-		m_collision_constraints[i] = nullptr;
-
-	m_static_constraints.clear();
-	m_collision_constraints.clear();
 }
 
 void ConstraintSolver::setSolverIteration(uint32_t iteration_num)
@@ -21,21 +14,17 @@ void ConstraintSolver::setSolverIteration(uint32_t iteration_num)
 	m_solver_iteration = iteration_num;
 }
 
-bool ConstraintSolver::SolvePBDConstraints()
+bool ConstraintSolver::SolvePBDConstraints(
+	std::vector<Constraint*>& static_constraints,
+	std::vector<Constraint*>& collision_constraints)
 {
-	for (Constraint* c : m_static_constraints)
+	for (uint32_t i = 0; i < m_solver_iteration; ++i)
 	{
-		c->SolveConstraint();
+		for (Constraint* c : static_constraints)
+		{
+			c->SolveConstraint();
+		}
 	}
+	
 	return true;
-}
-
-void ConstraintSolver::AddStaticConstraint(Constraint* constraint)
-{
-	m_static_constraints.push_back(constraint);
-}
-
-void ConstraintSolver::AddCollisionConstraint(Constraint* constraint)
-{
-	m_collision_constraints.push_back(constraint);
 }

@@ -88,6 +88,7 @@
     <ClCompile Include="CollisionDetection.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="Rigidbody.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imconfig.h">
@@ -186,6 +187,7 @@
     <ClInclude Include="CollisionDetection.h">
       <Filter>Header</Filter>
     </ClInclude>
+    <ClInclude Include="Rigidbody.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

@@ -2,11 +2,14 @@
 #include "GLFWApp.h"
 
 Floor::Floor()
+	:m_collider(nullptr)
 {
 }
 
 Floor::~Floor()
 {
+	if (m_collider) delete m_collider;
+	m_collider = nullptr;
 }
 
 void Floor::Initialize(const glm::vec3& init_pos, const std::shared_ptr<Shader>& shader)
@@ -17,16 +20,17 @@ void Floor::Initialize(const glm::vec3& init_pos, const std::shared_ptr<Shader>&
 	//					"resources/shader/shadow_mapping_fs.glsl");
 
 	std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
-	mesh->Initialize(shader);	   
-
 	std::vector<glm::vec3> vertex_pos;
+	std::vector<unsigned int> indices;
+
+	mesh->Initialize(shader);
+
 	vertex_pos.reserve(4);
 	vertex_pos.push_back(glm::vec3(  100.0f, 0.0f, -100.0f));
 	vertex_pos.push_back(glm::vec3(  100.0f, 0.0f,  100.0f));
 	vertex_pos.push_back(glm::vec3( -100.0f, 0.0f,  100.0f));
 	vertex_pos.push_back(glm::vec3( -100.0f, 0.0f, -100.0f));
 
-	std::vector<unsigned int> indices;
 	vertex_pos.reserve(6);
 	indices.push_back(0);
 	indices.push_back(1);
@@ -39,11 +43,10 @@ void Floor::Initialize(const glm::vec3& init_pos, const std::shared_ptr<Shader>&
 	mesh->setIndices(indices);
 	mesh->SetupGLBuffers();
 
-	setMesh(mesh);
-
-	// Not use primitive box geometry,
-	// Physics Engine has already created one for plane terrain
+	GameObject::setMesh(mesh);
 	GameObject::Initialize(init_pos);
+
+	m_collider = new PlaneCollider(glm::vec3(0,1,0), 0);
 
 }
 

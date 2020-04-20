@@ -29,7 +29,7 @@ public:
 	void ClearBuffer();
 	void ReleaseResources();
 	void SwitchMode();
-	void CreateMonkeys(int num, OBJECT_FLAG_ENUM type);
+	//void CreateMonkeys(int num, OBJECT_FLAG_ENUM type);
 	std::shared_ptr<Jelly> GenerateJelly(unsigned int n, float mass);
 
 	
@@ -41,6 +41,7 @@ public:
 	inline std::shared_ptr<ResourceManager> getResourceManager() { return m_resource_manager; }
 	inline std::shared_ptr<GUIManager> getGUIManager() { return m_gui_manager; }
 	inline const std::shared_ptr<Renderer> getRenderer() { return m_renderer; }
+	inline const std::shared_ptr<Simulation> getSimulator() { return m_simulator; }
 	inline bool GetAppStatus() { return m_app_status; };
 	
 	/*virtual functions*/

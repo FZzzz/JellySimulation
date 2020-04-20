@@ -23,12 +23,12 @@ bool CollisionDetection::PointOBBIntersection(PointCollider* point, OBB* obb)
 	const glm::vec3& point_pos = point->m_position;
 	const glm::vec3 v = point_pos - obb->m_center;
 	   
-	return (glm::abs(glm::dot(v, obb->m_local_axis[0])) <= obb->m_extend &&
-			glm::abs(glm::dot(v, obb->m_local_axis[0])) <= obb->m_extend &&
-			glm::abs(glm::dot(v, obb->m_local_axis[0])) <= obb->m_extend);
+	return (glm::abs(glm::dot(v, obb->m_local_axis[0])) <= obb->m_extend.x &&
+			glm::abs(glm::dot(v, obb->m_local_axis[1])) <= obb->m_extend.y &&
+			glm::abs(glm::dot(v, obb->m_local_axis[2])) <= obb->m_extend.z);
 }
 
-bool CollisionDetection::PointPlaneIntersection(PointCollider* point, Plane* plane)
+bool CollisionDetection::PointPlaneIntersection(PointCollider* point, PlaneCollider* plane)
 {
 	const glm::vec3& point_pos = point->m_position;
 	const float		 d2 = plane->m_d * plane->m_d;
@@ -36,7 +36,7 @@ bool CollisionDetection::PointPlaneIntersection(PointCollider* point, Plane* pla
 	return glm::abs(glm::dot(plane->m_normal, point_pos)) <= d2;
 }
 
-bool CollisionDetection::PointPlaneIntersection(glm::vec3 p, Plane* plane)
+bool CollisionDetection::PointPlaneIntersection(glm::vec3 p, PlaneCollider* plane)
 {
 	const float d2 = plane->m_d * plane->m_d;
 
@@ -76,17 +76,12 @@ bool CollisionDetection::SphereOBBIntersection(SphereCollider* sphere, OBB* obb)
 	return false;
 }
 
-bool CollisionDetection::SpherePlaneIntersection(SphereCollider* sphere, Plane* plane)
+bool CollisionDetection::SpherePlaneIntersection(SphereCollider* sphere, PlaneCollider* plane)
 {
 	const glm::vec3& center = sphere->m_center;
 	float d_sum = sphere->m_radius + plane->m_d;
 
 	return glm::dot(center, plane->m_normal) <= (d_sum*d_sum);
-}
-
-bool CollisionDetection::AABBOBBIntersection(AABB* aabb, OBB* obb)
-{
-	return false;
 }
 
 bool CollisionDetection::AABBAABBIntersection(AABB* box0, AABB* box1)
@@ -98,24 +93,37 @@ bool CollisionDetection::AABBAABBIntersection(AABB* box0, AABB* box1)
 	return false;
 }
 
-bool CollisionDetection::AABBPlaneIntersection(AABB* aabb, Plane* plane)
+bool CollisionDetection::AABBOBBIntersection(AABB* aabb, OBB* obb)
 {
-	const glm::vec3& min = aabb->m_min;
-	const glm::vec3& max = aabb->m_max;
+	return false;
+}
+
+bool CollisionDetection::AABBPlaneIntersection(AABB* aabb, PlaneCollider* plane)
+{
+	const glm::vec3& center = 0.5f * (aabb->m_min + aabb->m_max);
+	const glm::vec3& extend = aabb->m_max - center;
 		
-	return (
-		PointPlaneIntersection(glm::vec3(min.x, min.y, min.z), plane) ||
-		PointPlaneIntersection(glm::vec3(max.x, min.y, min.z), plane) ||
-		PointPlaneIntersection(glm::vec3(min.x, max.y, min.z), plane) ||
-		PointPlaneIntersection(glm::vec3(max.x, max.y, min.z), plane) ||
-		PointPlaneIntersection(glm::vec3(min.x, min.y, max.z), plane) ||
-		PointPlaneIntersection(glm::vec3(max.x, min.y, max.z), plane) ||
-		PointPlaneIntersection(glm::vec3(min.x, max.y, max.z), plane) ||
-		PointPlaneIntersection(glm::vec3(max.x, max.y, max.z), plane)
-		);
+	float r = extend.x * plane->m_normal.x + extend.y * plane->m_normal.y + extend.z * plane->m_normal.z;
+	float s = glm::dot(plane->m_normal, center) - plane->m_d;
+
+	return glm::abs(s) <= r;
 }
 
 bool CollisionDetection::OBBOBBIntersection(OBB* box0, OBB* box1)
 {
 	return false;
+}
+
+bool CollisionDetection::OBBPlaneIntersection(OBB* obb, PlaneCollider* plane)
+{
+	const glm::vec3& center = obb->m_center;
+	const glm::vec3& extend = obb->m_extend;
+	
+	float r = extend.x * glm::abs(glm::dot(plane->m_normal, obb->m_local_axis[0])) +
+			  extend.y * glm::abs(glm::dot(plane->m_normal, obb->m_local_axis[1])) +
+			  extend.z * glm::abs(glm::dot(plane->m_normal, obb->m_local_axis[2]));
+
+	float s = glm::dot(plane->m_normal, center) - plane->m_d;
+	   
+	return glm::abs(s) <= r;
 }

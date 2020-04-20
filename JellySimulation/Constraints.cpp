@@ -1,6 +1,8 @@
-#include "Constraints.h"
 #include <glm/glm.hpp>
-#include <iostream>
+#include <assert.h>
+#include "Constraints.h"
+
+#define EPSILON 0.0000000001f 
 
 Constraint::Constraint(size_t numOfRigidbodies)
 {
@@ -46,9 +48,13 @@ bool DistanceConstraint::SolveConstraint()
 	const float& w1 = p1_data.massInv;
 
 	float w_sum = w0 + w1;
-	float distance = glm::distance(p0_data.position, p1_data.position);
-	float C = distance - m_rest_length;
-	glm::vec3 v = p0_data.position - p1_data.position;
+	float distance = glm::distance(p0_data.new_position, p1_data.new_position);
+	float C = glm::abs(distance - m_rest_length);
+	glm::vec3 v = p0_data.new_position - p1_data.new_position;
+
+	//assert(distance < EPSILON);
+	if (distance < EPSILON)
+		distance = EPSILON;
 	
 	glm::vec3 n = v / distance;
 	
@@ -56,8 +62,8 @@ bool DistanceConstraint::SolveConstraint()
 	correction[1] = (-w1 / w_sum) * C * -n;
 
 	// Correction 
-	p0_data.position += correction[0];
-	p1_data.position += correction[1];
+	p0_data.new_position += m_stiffness * correction[0];
+	p1_data.new_position += m_stiffness * correction[1];
 
 	return true;
 }
@@ -89,6 +95,11 @@ std::vector<std::vector<float>> DistanceConstraint::GradientFunction()
 
 
 	return jacobian;
+}
+
+void DistanceConstraint::setStiffness(float stiffness)
+{
+	m_stiffness = stiffness;
 }
 
 bool BendConstraint::SolveConstraint()

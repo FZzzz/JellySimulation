@@ -78,7 +78,7 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 	glfwSetKeyCallback(m_window, Key_callback);
 	glfwSwapInterval(0);
 
-	//initialize glew
+	// Initialize glew
 	glewExperimental = true;
 	GLenum status = glewInit();
 	if (status != GLEW_OK)
@@ -96,6 +96,7 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 
 	/* Simulator creation */
 	m_simulator = std::make_shared<Simulation>();
+	m_simulator->Initialize();
 	
 	// ShowdowMapping shader settings
 	std::shared_ptr<Shader> shader = std::make_shared<Shader>("ShadowMapping");
@@ -150,7 +151,7 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 		// Initialize asset importer
 		m_importer = std::make_shared<AssetImporter>();
 	}
-	//Objects setting
+	// Objects setting
 	//std::shared_ptr<GameObject> obj = std::make_shared<GameObject>();	
 	{
 		//default mesh
@@ -170,7 +171,7 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 		}
 	}
 
-	//cube mesh generation for keycall_back and resource management test
+	// cube mesh generation for keycall_back and resource management test
 	{
 		auto load_status = IMPORT_STATUS::IMPORT_FAILED;
 		auto mesh = m_importer->LoadMesh("resources/models/monkey.obj", shader, load_status);
@@ -205,20 +206,40 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 	}
 	
 	
-	//Terrain Initilization
-	std::shared_ptr<Floor> plane_terrain = std::make_shared<Floor>();
-	plane_terrain->Initialize(glm::vec3(0, 0, 0), shader);
-	m_resource_manager->AddGameObject(std::move(static_cast<std::shared_ptr<GameObject>>(plane_terrain)));
-	
-	//CreateMonkeys(10000, OBJECT_FLAG_ENUM::OBJECT_STATIC);
+	// Terrain Initilization
 	{
-		constexpr unsigned int jelly_dim = 16;
+		std::shared_ptr<Floor> plane_terrain = std::make_shared<Floor>();
+		plane_terrain->Initialize(glm::vec3(0, 0, 0), shader);
+		m_resource_manager->AddGameObject(std::move(static_cast<std::shared_ptr<GameObject>>(plane_terrain)));
+		m_simulator->AddCollider(plane_terrain->getCollider());
+	}
+
+	// Jelly intialization
+	{
+		constexpr unsigned int jelly_dim = 8;
 		const float particle_mass = 0.05f;
 		std::shared_ptr<Jelly> jelly = GenerateJelly(jelly_dim, particle_mass);
 #ifdef _DEBUG
 		assert(jelly != nullptr);
 #endif
 		m_resource_manager->AddJelly(jelly);
+	}
+
+	// Set colliders
+	{
+		glm::vec3 init_pos0(-1, 5, 0);
+		glm::vec3 init_pos1( 1, 5, 0);
+		float	  particle_mass = 0.5f;
+
+		Particle* p0 = new Particle(init_pos0, particle_mass);
+		Particle* p1 = new Particle(init_pos1, particle_mass);
+		DistanceConstraint* distance_constraint = new DistanceConstraint(p0, p1, 1);
+		
+		distance_constraint->setStiffness(0.7f);
+
+		m_simulator->AddParticle(p0);
+		m_simulator->AddParticle(p1);
+		m_simulator->AddStaticConstraint(distance_constraint);
 	}
 
 	/*
@@ -284,6 +305,7 @@ void GLFWApp::SwitchMode()
 	m_renderer->renderQuad = !m_renderer->renderQuad;
 }
 
+/*
 void GLFWApp::CreateMonkeys(int num, OBJECT_FLAG_ENUM type)
 {
 	auto mesh_list = m_resource_manager->getMeshes();
@@ -315,6 +337,8 @@ void GLFWApp::CreateMonkeys(int num, OBJECT_FLAG_ENUM type)
 		//name_count++;
 	}
 }
+*/
+
 
 std::shared_ptr<Jelly> GLFWApp::GenerateJelly(unsigned int n, float mass)
 {
@@ -510,15 +534,8 @@ void Key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 		case GLFW_KEY_SPACE:
 		{
-			auto resource_manager = GLFWApp::getInstance()->getResourceManager();
-			auto anim_characters = resource_manager->getAnimCharacters();
-			for (auto it = anim_characters.cbegin();
-				it != anim_characters.cend();
-				++it)
-			{
-				auto character = *it;
-				character->getAnimation()->Pause();
-			}
+			auto simulator = instance->getSimulator();
+			//simulator->Step(0.0001f);
 			break;
 		}
 		
@@ -582,7 +599,7 @@ void GLFWApp::Update()
 	
 	float dt = m_currentTime - m_previousTime;
 
-	m_simulator->Step(dt);
+	m_simulator->Step(0.001f);
 
 	for (auto it = anim_characters.cbegin(); it != anim_characters.cend(); ++it)
 	{
