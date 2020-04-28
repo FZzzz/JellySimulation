@@ -27,6 +27,9 @@ public:
 	
 	bool		m_isStatic;
 
+	// setters
+	void setCollider(Collider* collider);
+
 	// getters for members unchange members 
 	inline float getMass()			{ return m_mass; };
 	inline float getMassInv()		{ return m_massInv; };

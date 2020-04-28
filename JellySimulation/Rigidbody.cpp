@@ -27,3 +27,8 @@ void Rigidbody::Update()
 	m_position = m_new_position;
 	m_velocity = m_new_velocity;
 }
+
+void Rigidbody::setCollider(Collider* collider)
+{
+	m_collider = collider;
+}

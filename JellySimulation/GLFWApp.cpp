@@ -535,6 +535,7 @@ void Key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		case GLFW_KEY_SPACE:
 		{
 			auto simulator = instance->getSimulator();
+			simulator->Pause();
 			//simulator->Step(0.0001f);
 			break;
 		}

@@ -33,6 +33,7 @@ public:
 	void AddStaticConstraint(Constraint* constraint);
 	void SetSolverIteration(uint32_t iter_count);
 
+	void Pause();
 
 	// setters
 	void setGravity(float gravity);
@@ -43,6 +44,7 @@ private:
 
 	void UpdatePhysics(float dt);
 	void CollisionDetection();
+	void HandleCollisionResponse();
 	void GenerateCollisionConstraint();
 	bool ProjectConstraints();
 	
@@ -51,6 +53,7 @@ private:
 
 	SimWorldDesc m_world_desc;
 	bool m_initialized;
+	bool m_pause;
 
 	std::shared_ptr<ConstraintSolver> m_solver;
 

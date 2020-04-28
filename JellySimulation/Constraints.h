@@ -15,8 +15,6 @@ class Constraint
 {
 public:
 
-	// Constraint caches particles but not owning it
-	std::vector<Particle*> m_particles;
 	
 	Constraint() = delete;
 	Constraint(size_t numOfRigidbodies);
@@ -29,6 +27,13 @@ public:
 	
 	// getter
 	virtual CONSTRAINT_TYPE getConstraintType() = 0;
+
+	/* 
+	 * Constraint caches particles but not owning it
+	 * TODO: Rewrite this (Not generic solution) 
+	 */
+	std::vector<Particle*> m_particles;
+
 
 };
 

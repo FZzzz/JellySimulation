@@ -1,9 +1,10 @@
 #include "Simulation.h"
 #include "imgui/imgui.h"
+#include "CollisionDetection.h"
 #include <iostream>
 
 Simulation::Simulation()
-	: m_solver(nullptr), m_initialized(false), m_world_desc(SimWorldDesc(-9.8f, 0.f))
+	: m_solver(nullptr), m_initialized(false), m_world_desc(SimWorldDesc(-9.8f, 0.f)), m_pause(false)
 {
 	
 
@@ -23,10 +24,19 @@ void Simulation::Initialize()
 	m_initialized = true;
 }
 
+/*
+ * Step simulation
+ * @param[in] dt time step
+ * @retval true  Successfully project constraints
+ * @retval false Failed on constraint projection
+ */
 bool Simulation::Step(float dt)
 {
 	if (!m_initialized)
 		Initialize();
+
+	if (m_pause)
+		return true;
 
 	UpdatePhysics(dt);
 	CollisionDetection();
@@ -59,6 +69,11 @@ void Simulation::AddStaticConstraint(Constraint* constraint)
 void Simulation::SetSolverIteration(uint32_t iter_count)
 {
 	m_solver->setSolverIteration(iter_count);
+}
+
+void Simulation::Pause()
+{
+	m_pause = !m_pause;
 }
 
 void Simulation::setGravity(float gravity)
@@ -104,6 +119,18 @@ void Simulation::CollisionDetection()
 		vec.clear();
 	}
 
+	for (size_t i = 0; i < m_particles.size(); ++i)
+	{
+		const glm::vec3& point_pos = m_particles[i]->m_data->new_position;
+
+		for (size_t j = 0; j < m_colliders.size(); ++j)
+		{
+			/* If collided with other, then apply collision handling directly */
+			if (m_particles[i]->TestCollision(m_colliders[j]))
+				m_particles[i]->OnCollision(m_colliders[j]);
+		}
+	}
+
 	// TODO: Change to m_rigidbodies[i], m_rigidbodies[j]
 	for (size_t i = 0; i < m_colliders.size(); ++i)
 	{
@@ -114,6 +141,17 @@ void Simulation::CollisionDetection()
 				m_collision_table[i].push_back(m_colliders[j]);
 		}
 	}
+}
+
+/*
+ * This function handles collision response for specific collision pairs.
+ * (Particle v.s. Static plane),  (Particle v.s. Static AABB), (Particle v.s Static OBB)
+ */
+void Simulation::HandleCollisionResponse()
+{
+	
+
+
 }
 
 /*
@@ -150,10 +188,10 @@ void Simulation::ApplySolverResults(float dt)
 	{
 		p->Update(dt);
 	}
-	/*
+	
 	std::cout << m_particles[0]->m_data->position.x << " "
 		<< m_particles[1]->m_data->position.x << std::endl;
-	*/
+	
 /*
 #ifdef _DEBUG
 	{
