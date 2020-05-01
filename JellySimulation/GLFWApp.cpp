@@ -227,15 +227,15 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 
 	// Set colliders
 	{
-		glm::vec3 init_pos0(-1, 5, 0);
-		glm::vec3 init_pos1( 1, 5, 0);
-		float	  particle_mass = 0.5f;
+		glm::vec3 init_pos0(-1.f, 5, 0);
+		glm::vec3 init_pos1( 1.f, 5, 0);
+		float	  particle_mass = 20.f;
 
 		Particle* p0 = new Particle(init_pos0, particle_mass);
 		Particle* p1 = new Particle(init_pos1, particle_mass);
-		DistanceConstraint* distance_constraint = new DistanceConstraint(p0, p1, 1);
+		DistanceConstraint* distance_constraint = new DistanceConstraint(p0, p1, 1.f);
 		
-		distance_constraint->setStiffness(0.7f);
+		distance_constraint->setStiffness(0.1f);
 
 		m_simulator->AddParticle(p0);
 		m_simulator->AddParticle(p1);

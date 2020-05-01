@@ -49,7 +49,7 @@ bool DistanceConstraint::SolveConstraint()
 
 	float w_sum = w0 + w1;
 	float distance = glm::distance(p0_data.new_position, p1_data.new_position);
-	float C = glm::abs(distance - m_rest_length);
+	float C = distance - m_rest_length;
 	glm::vec3 v = p0_data.new_position - p1_data.new_position;
 
 	//assert(distance < EPSILON);
@@ -59,7 +59,7 @@ bool DistanceConstraint::SolveConstraint()
 	glm::vec3 n = v / distance;
 	
 	correction[0] = (-w0 / w_sum) * C * n;
-	correction[1] = (-w1 / w_sum) * C * -n;
+	correction[1] = (w1 / w_sum) * C * n;
 
 	// Correction 
 	p0_data.new_position += m_stiffness * correction[0];
