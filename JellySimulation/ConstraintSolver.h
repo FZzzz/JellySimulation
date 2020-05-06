@@ -5,31 +5,49 @@
 #include <cstdint>
 #include "Constraints.h"
 
+enum class PBD_MODE
+{
+	ORIGINAL,
+	XPBD
+};
 
 class ConstraintSolver
 {
 public:
-	ConstraintSolver();
+	ConstraintSolver() = delete;
+	ConstraintSolver(PBD_MODE mode);
 	~ConstraintSolver();
 	
-	bool SolvePBDConstraints(
+	bool SolveConstraints(
+		const float &dt,
 		std::vector<Constraint*>& static_constraints, 
 		std::vector<Constraint*>& collision_constraints
 	);
-
-	/*
-	TODO: Decompose these functions. Constraint sovler should not record constrains
-	*/
 	
 	// setter
 	void setSolverIteration(uint32_t iteration_num);
+	void setPBDMode(PBD_MODE mode);
 
 	//getter
 	uint32_t getSolverIteration() { return m_solver_iteration; }
+	PBD_MODE getPBDMode() { return m_mode; }
 
 private:
 
+	bool SolvePBDConstraints(
+		std::vector<Constraint*>& static_constraints,
+		std::vector<Constraint*>& collision_constraints
+	);
+
+	bool SolveXPBDConstraints(
+		const float &dt,
+		std::vector<Constraint*>& static_constraints,
+		std::vector<Constraint*>& collision_constraints
+	);
+
+
 	uint32_t m_solver_iteration;
+	PBD_MODE m_mode;
 
 
 };

@@ -26,7 +26,7 @@ public:
 	Simulation(SimWorldDesc desc);
 	~Simulation();
 
-	void Initialize();
+	void Initialize(PBD_MODE mode);
 	bool Step(float dt);
 	void AddParticle(Particle* particle);
 	void AddCollider(Collider* collider);
@@ -46,7 +46,7 @@ private:
 	void CollisionDetection();
 	void HandleCollisionResponse();
 	void GenerateCollisionConstraint();
-	bool ProjectConstraints();
+	bool ProjectConstraints(const float &dt);
 	
 	void AddCollisionConstraint(Constraint* constraint);
 	void ApplySolverResults(float dt);

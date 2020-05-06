@@ -96,7 +96,8 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 
 	/* Simulator creation */
 	m_simulator = std::make_shared<Simulation>();
-	m_simulator->Initialize();
+	m_simulator->Initialize(PBD_MODE::XPBD);
+	m_simulator->SetSolverIteration(1);
 	
 	// ShowdowMapping shader settings
 	std::shared_ptr<Shader> shader = std::make_shared<Shader>("ShadowMapping");
@@ -229,13 +230,14 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 	{
 		glm::vec3 init_pos0(-1.f, 5, 0);
 		glm::vec3 init_pos1( 1.f, 5, 0);
-		float	  particle_mass = 20.f;
+		float	  particle_mass = 1.f;
 
 		Particle* p0 = new Particle(init_pos0, particle_mass);
 		Particle* p1 = new Particle(init_pos1, particle_mass);
 		DistanceConstraint* distance_constraint = new DistanceConstraint(p0, p1, 1.f);
 		
-		distance_constraint->setStiffness(0.1f);
+		distance_constraint->setStiffness(0.01f);
+		distance_constraint->setCompliance(0.001f);
 
 		m_simulator->AddParticle(p0);
 		m_simulator->AddParticle(p1);

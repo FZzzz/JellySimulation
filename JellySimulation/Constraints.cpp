@@ -5,6 +5,7 @@
 #define EPSILON 0.0000000001f 
 
 Constraint::Constraint(size_t numOfRigidbodies)
+	: m_lambda(0.f), m_stiffness(1.f), m_compliance(0.f), m_compliance_tmp(0.f)
 {
 	m_particles.resize(numOfRigidbodies, nullptr);
 }
@@ -14,6 +15,26 @@ Constraint::~Constraint()
 	for (size_t i = 0; i < m_particles.size(); ++i)
 		m_particles[i] = nullptr;
 	m_particles.clear();
+}
+
+void Constraint::ComputeCompliance(const float &dt)
+{
+	m_compliance_tmp = m_compliance / (dt * dt);
+}
+
+void Constraint::setStiffness(float stiffness)
+{
+	if (stiffness > 1.f)
+		m_stiffness = 1.f;
+	else if (stiffness < 0.f)
+		m_stiffness = 0.f;
+	else
+		m_stiffness = stiffness;
+}
+
+void Constraint::setCompliance(float compliance)
+{
+	m_compliance = compliance;
 }
 
 BendConstraint::BendConstraint(Particle* p1, Particle* p2, float d)
@@ -26,8 +47,8 @@ BendConstraint::~BendConstraint()
 {
 }
 
-DistanceConstraint::DistanceConstraint(Particle* p0, Particle* p1, float d)
-	: Constraint(2), m_rest_length(d), m_stiffness(1.f)
+DistanceConstraint::DistanceConstraint(Particle* p0, Particle* p1, float rest_length)
+	: Constraint(2), m_rest_length(rest_length)
 {
 	m_particles[0] = p0;
 	m_particles[1] = p1;
@@ -37,9 +58,9 @@ DistanceConstraint::~DistanceConstraint()
 {
 }
 
-bool DistanceConstraint::SolveConstraint()
+bool DistanceConstraint::SolvePBDConstraint()
 {
-	glm::vec3 correction[2];
+	glm::vec3 correction;
 
 	ParticleData& p0_data = *(m_particles[0]->m_data);
 	ParticleData& p1_data = *(m_particles[1]->m_data);
@@ -58,12 +79,42 @@ bool DistanceConstraint::SolveConstraint()
 	
 	glm::vec3 n = v / distance;
 	
-	correction[0] = (-w0 / w_sum) * C * n;
-	correction[1] = (w1 / w_sum) * C * n;
+	correction = (1.f / w_sum) * C * n;
 
 	// Correction 
-	p0_data.new_position += m_stiffness * correction[0];
-	p1_data.new_position += m_stiffness * correction[1];
+	p0_data.new_position += m_stiffness * -w0 * correction;
+	p1_data.new_position += m_stiffness *  w1 * correction;
+
+	return true;
+}
+
+bool DistanceConstraint::SolveXPBDConstraint()
+{
+	glm::vec3 correction;
+
+	ParticleData& p0_data = *(m_particles[0]->m_data);
+	ParticleData& p1_data = *(m_particles[1]->m_data);
+
+	const float& w0 = p0_data.massInv;
+	const float& w1 = p1_data.massInv;
+
+	float w_sum = w0 + w1;
+	float distance = glm::distance(p0_data.new_position, p1_data.new_position);
+	float C = distance - m_rest_length;
+	glm::vec3 v = p0_data.new_position - p1_data.new_position;
+
+	//assert(distance < EPSILON);
+	if (distance < EPSILON)
+		distance = EPSILON;
+
+	float delta_lambda = (-C - m_compliance_tmp * m_lambda) / (w_sum + m_compliance_tmp);
+	correction = (delta_lambda * v) / distance;	
+	m_lambda += delta_lambda;
+	
+
+	// Correction 
+	p0_data.new_position +=  w0 * correction;
+	p1_data.new_position += -w1 * correction;
 
 	return true;
 }
@@ -97,12 +148,12 @@ std::vector<std::vector<float>> DistanceConstraint::GradientFunction()
 	return jacobian;
 }
 
-void DistanceConstraint::setStiffness(float stiffness)
+bool BendConstraint::SolvePBDConstraint()
 {
-	m_stiffness = stiffness;
+	return true;
 }
 
-bool BendConstraint::SolveConstraint()
+bool BendConstraint::SolveXPBDConstraint()
 {
 	return true;
 }

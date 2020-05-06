@@ -18,9 +18,9 @@ Simulation::~Simulation()
 {
 }
 
-void Simulation::Initialize()
+void Simulation::Initialize(PBD_MODE mode)
 {
-	m_solver = std::make_shared<ConstraintSolver>();
+	m_solver = std::make_shared<ConstraintSolver>(mode);
 	m_initialized = true;
 }
 
@@ -33,7 +33,7 @@ void Simulation::Initialize()
 bool Simulation::Step(float dt)
 {
 	if (!m_initialized)
-		Initialize();
+		Initialize(PBD_MODE::ORIGINAL);
 
 	if (m_pause)
 		return true;
@@ -42,7 +42,7 @@ bool Simulation::Step(float dt)
 	CollisionDetection();
 	GenerateCollisionConstraint();
 	
- 	if (!ProjectConstraints())
+ 	if (!ProjectConstraints(dt))
 		return false;
 
 	ApplySolverResults(dt);
@@ -170,9 +170,9 @@ void Simulation::GenerateCollisionConstraint()
 
 }
 
-bool Simulation::ProjectConstraints()
+bool Simulation::ProjectConstraints(const float &dt)
 {
-	m_solver->SolvePBDConstraints(m_static_constraints, m_collision_constraints);
+	m_solver->SolveConstraints(dt, m_static_constraints, m_collision_constraints);
 
 	return true;
 }

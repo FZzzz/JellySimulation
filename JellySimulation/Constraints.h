@@ -5,7 +5,7 @@
 #include <functional>
 #include "Particle.h"
 
-enum CONSTRAINT_TYPE
+enum class CONSTRAINT_TYPE
 {
 	CONSTRAINT_DISTANCE,
 	CONSTRAINT_BEND
@@ -15,16 +15,23 @@ class Constraint
 {
 public:
 
-	
 	Constraint() = delete;
 	Constraint(size_t numOfRigidbodies);
 	~Constraint();
 
-	virtual bool SolveConstraint() = 0;
+	void InitLambda() { m_lambda = 0.0f; };
+	void ComputeCompliance(const float &dt);
+
+	virtual bool SolvePBDConstraint() = 0;
+	virtual bool SolveXPBDConstraint() = 0;
 	
 	virtual float ConstraintFunction() = 0;
 	virtual std::vector<std::vector<float>> GradientFunction() = 0;
 	
+	// setters
+	void setStiffness(float stiffness);
+	void setCompliance(float compliance);
+
 	// getter
 	virtual CONSTRAINT_TYPE getConstraintType() = 0;
 
@@ -33,7 +40,15 @@ public:
 	 * TODO: Rewrite this (Not generic solution) 
 	 */
 	std::vector<Particle*> m_particles;
+	float m_lambda;
 
+	// stiffness is the value between 0-1
+	float m_stiffness;
+
+	// XPBD 
+	float m_compliance;
+	// compliance_tmp = compliance / (dt * dt)
+	float m_compliance_tmp;
 
 };
 
@@ -46,27 +61,25 @@ public:
 	/*
 	 * @param p1 First particle
 	 * @param p2 Second paritcle
-	 * @param d  Initial distance of two particle
+	 * @param d  Rest length of two particle
 	 */
-	DistanceConstraint(Particle* p0, Particle* p1, float d);
+	DistanceConstraint(Particle* p0, Particle* p1, float rest_length);
 	~DistanceConstraint();
 
-	virtual bool SolveConstraint();
+	virtual bool SolvePBDConstraint();
+	virtual bool SolveXPBDConstraint();
 
 	virtual float ConstraintFunction();
 	virtual std::vector<std::vector<float>> GradientFunction();
 
-	// setters
-	void setStiffness(float stiffness);
 
 	// getters
 	CONSTRAINT_TYPE getConstraintType() { return CONSTRAINT_TYPE::CONSTRAINT_DISTANCE; };
 
 private: 
 
-	// stiffness is the value between 0-1
-	float m_stiffness;
 	float m_rest_length;
+
 };
 
 
@@ -84,7 +97,8 @@ public:
 	BendConstraint(Particle* p1, Particle* p2, float d);
 	~BendConstraint();
 
-	virtual bool SolveConstraint();
+	virtual bool SolvePBDConstraint();
+	virtual bool SolveXPBDConstraint();
 
 	virtual float ConstraintFunction();
 	virtual std::vector<std::vector<float>> GradientFunction();
