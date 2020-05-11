@@ -50,7 +50,7 @@ public:
 	void UpdateCollider();
 
 	bool TestCollision(Collider* other);
-	void OnCollision(Collider* other);
+	void OnCollision(Collider* other, const float& dt);
 	// Attributes
 	// use pointer to maximize CPU cache performance
 	ParticleData*  m_data;

@@ -7,7 +7,7 @@
 
 enum class PBD_MODE
 {
-	ORIGINAL,
+	PBD,
 	XPBD
 };
 

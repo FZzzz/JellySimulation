@@ -76,7 +76,7 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 	glfwSetWindowPos(m_window, 100, 100);
 	glfwMakeContextCurrent(m_window);
 	glfwSetKeyCallback(m_window, Key_callback);
-	glfwSwapInterval(0);
+	glfwSwapInterval(1);
 
 	// Initialize glew
 	glewExperimental = true;
@@ -96,8 +96,8 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 
 	/* Simulator creation */
 	m_simulator = std::make_shared<Simulation>();
-	m_simulator->Initialize(PBD_MODE::XPBD);
-	m_simulator->SetSolverIteration(1);
+	m_simulator->Initialize(PBD_MODE::PBD);
+	m_simulator->SetSolverIteration(5);
 	
 	// ShowdowMapping shader settings
 	std::shared_ptr<Shader> shader = std::make_shared<Shader>("ShadowMapping");
@@ -219,7 +219,9 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 	{
 		constexpr unsigned int jelly_dim = 8;
 		const float particle_mass = 0.05f;
-		std::shared_ptr<Jelly> jelly = GenerateJelly(jelly_dim, particle_mass);
+		const float half_width = 5.f;
+		const glm::vec3 init_pos(0, 30.f, 0);
+		std::shared_ptr<Jelly> jelly = GenerateJelly(jelly_dim, particle_mass, half_width, init_pos);
 #ifdef _DEBUG
 		assert(jelly != nullptr);
 #endif
@@ -228,12 +230,20 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 
 	// Set colliders
 	{
+		/*
+		AABB* aabb = new AABB(
+			glm::vec3(-15.0f, 0.f, -100.f),
+			glm::vec3(0.f, 10.f, 100.f)
+		);
+		m_simulator->AddCollider(aabb);
+		*/
+		/*
 		glm::vec3 init_pos0(-1.f, 5, 0);
 		glm::vec3 init_pos1( 1.f, 5, 0);
 		float	  particle_mass = 1.f;
 
-		Particle* p0 = new Particle(init_pos0, particle_mass);
-		Particle* p1 = new Particle(init_pos1, particle_mass);
+		Particle_Ptr p0 = std::make_shared<Particle>(init_pos0, particle_mass);
+		Particle_Ptr p1 = std::make_shared<Particle>(init_pos1, particle_mass);
 		DistanceConstraint* distance_constraint = new DistanceConstraint(p0, p1, 1.f);
 		
 		distance_constraint->setStiffness(0.01f);
@@ -242,6 +252,7 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 		m_simulator->AddParticle(p0);
 		m_simulator->AddParticle(p1);
 		m_simulator->AddStaticConstraint(distance_constraint);
+		*/
 	}
 
 	/*
@@ -342,19 +353,22 @@ void GLFWApp::CreateMonkeys(int num, OBJECT_FLAG_ENUM type)
 */
 
 
-std::shared_ptr<Jelly> GLFWApp::GenerateJelly(unsigned int n, float mass)
+std::shared_ptr<Jelly> GLFWApp::GenerateJelly(unsigned int n, float mass, float half_width, glm::vec3 init_pos)
 {
 	if (n < 2)
 		return false;
 
 	std::shared_ptr<Jelly> jelly = std::make_shared<Jelly>();
 
+	std::unordered_map<Particle_Ptr, unsigned int> index_map;
 	std::vector<std::vector<Particle_Ptr>> ps_sub(n, std::vector<Particle_Ptr>(n, nullptr));
 	std::vector<std::vector<std::vector<Particle_Ptr>>> particles(n, ps_sub);
 	std::vector<glm::vec3> positions;
 	std::vector<unsigned int> indices;
+	std::vector<Constraint*> jelly_springs;
 
-	const float step = 2.0f / static_cast<float>(n-1);
+	unsigned int idx = 0;
+	const float step = 2.f * half_width / static_cast<float>(n-1);
 	for (unsigned int z = 0; z < n; z++)
 	{
 		for (unsigned int y = 0; y < n; y++)
@@ -362,114 +376,194 @@ std::shared_ptr<Jelly> GLFWApp::GenerateJelly(unsigned int n, float mass)
 			for (unsigned int x = 0; x < n; x++)
 			{
 				//size_t idx = z * n*n + y * n + x;
-				float t_x = -1.0f + step * static_cast<float>(x);
-				float t_y = -1.0f + step * static_cast<float>(y);
-				float t_z = -1.0f + step * static_cast<float>(z);
+				glm::vec3 pos(
+					-half_width + step * static_cast<float>(x),
+					-half_width + step * static_cast<float>(y),
+					-half_width + step * static_cast<float>(z)
+				);
 				
-				glm::vec3 pos(t_x, t_y, t_z);
-				
-				auto particle = std::make_shared<Particle>(pos, mass);
+				auto particle = std::make_shared<Particle>(init_pos + pos, mass);
 				particles[z][y][x] = particle;
-									
-				//positions.push_back(pos);
+				m_simulator->AddParticle(particle);
+				index_map.emplace(particle, idx);
+				idx++;
 			}
 		}
 	}
 	   
 	unsigned int index = 0;
-	//triangle faces
+	/*
+	* triangle faces
+	* 0-1-2-3-4-5-.....-n
+	* n-1 spaces
+	*/
 	//face 1 front
-	for (unsigned int j = 0; j < n-1; j++)
+	for (unsigned int z = 0; z < n; z++)
 	{
-		for (unsigned int i = 0; i < n-1; i++)
+		for (unsigned int y = 0; y < n; y++)
 		{
-			index = n * j + i;
-			indices.push_back(index);
-			indices.push_back(index + 1);
-			indices.push_back(index + (n+1));
+			Particle_Ptr p0 = particles[z][y][0];
+			Particle_Ptr p0_neighbor[3] = { nullptr };
+			
+			p0_neighbor[0] = (y + 1 < n ) ? particles[z][y + 1][0]: nullptr;
+			p0_neighbor[1] = (z + 1 < n && y + 1 < n) ? particles[z + 1][y + 1][0] : nullptr;
+			p0_neighbor[2] = (z + 1 < n) ? particles[z + 1][y][0] : nullptr;
 
-			indices.push_back(index);
-			indices.push_back(index + (n+1));
-			indices.push_back(index + n);
+			if (p0_neighbor[0] && p0_neighbor[1] && p0_neighbor[2])
+			{
+				indices.push_back(index_map[p0]);
+				indices.push_back(index_map[p0_neighbor[0]]);
+				indices.push_back(index_map[p0_neighbor[1]]);
+				indices.push_back(index_map[p0]);
+				indices.push_back(index_map[p0_neighbor[1]]);
+				indices.push_back(index_map[p0_neighbor[2]]);
+			}
+
+			Particle_Ptr p1 = particles[z][y][n-1];
+			Particle_Ptr p1_neighbor[3] = { nullptr };
+
+			p1_neighbor[0] = (y + 1 < n) ? particles[z][y + 1][n - 1] : nullptr;
+			p1_neighbor[1] = (z + 1 < n && y + 1 < n) ? particles[z + 1][y + 1][n - 1] : nullptr;
+			p1_neighbor[2] = (z + 1 < n) ? particles[z + 1][y][n - 1] : nullptr;
+
+			if (p1_neighbor[0] && p1_neighbor[1] && p1_neighbor[2])
+			{
+				indices.push_back(index_map[p1]);
+				indices.push_back(index_map[p1_neighbor[1]]);
+				indices.push_back(index_map[p1_neighbor[0]]);
+				indices.push_back(index_map[p1]);
+				indices.push_back(index_map[p1_neighbor[2]]);
+				indices.push_back(index_map[p1_neighbor[1]]);
+			}
 		}
 	}
-	//face 2 back
-	for (unsigned int j = 0; j < n-1; j++)
+	for (unsigned int z = 0; z < n; z++)
 	{
-		for (unsigned int i = 0; i < n-1; i++)
+		for (unsigned int x = 0; x < n; x++)
 		{
-			index = n * j + i + (n*n*(n-1));
-			indices.push_back(index);
-			indices.push_back(index + 1);
-			indices.push_back(index + (n+1));
+			Particle_Ptr p0 = particles[z][0][x];
+			Particle_Ptr p0_neighbor[3] = { nullptr };
 
-			indices.push_back(index);
-			indices.push_back(index + (n+1));
-			indices.push_back(index + n);
+			p0_neighbor[0] = (x + 1 < n) ? particles[z][0][x + 1] : nullptr;
+			p0_neighbor[1] = (z + 1 < n && x + 1 < n) ? particles[z + 1][0][x + 1] : nullptr;
+			p0_neighbor[2] = (z + 1 < n) ? particles[z + 1][0][x] : nullptr;
+
+			if (p0_neighbor[0] && p0_neighbor[1] && p0_neighbor[2])
+			{
+				indices.push_back(index_map[p0]);
+				indices.push_back(index_map[p0_neighbor[0]]);
+				indices.push_back(index_map[p0_neighbor[1]]);
+				indices.push_back(index_map[p0]);
+				indices.push_back(index_map[p0_neighbor[1]]);
+				indices.push_back(index_map[p0_neighbor[2]]);
+			}
+
+			Particle_Ptr p1 = particles[z][n - 1][x];
+			Particle_Ptr p1_neighbor[3] = { nullptr };
+
+			p1_neighbor[0] = (x + 1 < n) ? particles[z][n - 1][x + 1] : nullptr;
+			p1_neighbor[1] = (z + 1 < n && x + 1 < n) ? particles[z + 1][n - 1][x + 1] : nullptr;
+			p1_neighbor[2] = (z + 1 < n) ? particles[z + 1][n - 1][x] : nullptr;
+
+			if (p1_neighbor[0] && p1_neighbor[1] && p1_neighbor[2])
+			{
+				indices.push_back(index_map[p1]);
+				indices.push_back(index_map[p1_neighbor[1]]);
+				indices.push_back(index_map[p1_neighbor[0]]);
+				indices.push_back(index_map[p1]);
+				indices.push_back(index_map[p1_neighbor[2]]);
+				indices.push_back(index_map[p1_neighbor[1]]);
+			}
 		}
 	}
-	//face 3 left 
-	for (unsigned int j = 0; j < n-1; j++)
+	for (unsigned int y = 0; y < n; y++)
 	{
-		for (unsigned int i = 0; i < n-1; i++)
+		for (unsigned int x = 0; x < n; x++)
 		{
-			index = n * j + n*n * i;
-			indices.push_back(index);
-			indices.push_back(index + 1);
-			indices.push_back(index + (n+1));
+			Particle_Ptr p0 = particles[0][y][x];
+			Particle_Ptr p0_neighbor[3] = { nullptr };
 
-			indices.push_back(index);
-			indices.push_back(index + (n+1));
-			indices.push_back(index + n);
-		}
-	}
-	//face 4 right
-	for (unsigned int j = 0; j < n-1; j++)
-	{
-		for (unsigned int i = 0; i < n-1; i++)
-		{
-			index = n * j + n*n * i + (n-1);
-			indices.push_back(index);
-			indices.push_back(index + 1);
-			indices.push_back(index + (n+1));
+			p0_neighbor[0] = (x + 1 < n) ? particles[0][y][x + 1] : nullptr;
+			p0_neighbor[1] = (y + 1 < n && x + 1 < n) ? particles[0][y + 1][x + 1] : nullptr;
+			p0_neighbor[2] = (y + 1 < n) ? particles[0][y + 1][x] : nullptr;
 
-			indices.push_back(index);
-			indices.push_back(index + (n+1));
-			indices.push_back(index + n);
-		}
-	}
-	//face 5 top 
-	for (unsigned int j = 0; j < n-1; j++)
-	{
-		for (unsigned int i = 0; i < n-1; i++)
-		{
-			index = n*n * j + i;
-			indices.push_back(index);
-			indices.push_back(index + 1);
-			indices.push_back(index + (n+1));
+			if (p0_neighbor[0] && p0_neighbor[1] && p0_neighbor[2])
+			{
+				indices.push_back(index_map[p0]);
+				indices.push_back(index_map[p0_neighbor[0]]);
+				indices.push_back(index_map[p0_neighbor[1]]);
+				indices.push_back(index_map[p0]);
+				indices.push_back(index_map[p0_neighbor[1]]);
+				indices.push_back(index_map[p0_neighbor[2]]);
+			}
 
-			indices.push_back(index);
-			indices.push_back(index + (n+1));
-			indices.push_back(index + n);
-		}
-	}
-	//face 6 buttom
-	for (unsigned int j = 0; j < n-1; j++)
-	{
-		for (unsigned int i = 0; i < n-1; i += 1)
-		{
-			index = n*n * j + i + n*(n-1);
-			indices.push_back(index);
-			indices.push_back(index + 1);
-			indices.push_back(index + (n+1));
+			Particle_Ptr p1 = particles[n - 1][y][x];
+			Particle_Ptr p1_neighbor[3] = { nullptr };
 
-			indices.push_back(index);
-			indices.push_back(index + (n+1));
-			indices.push_back(index + n);
+			p1_neighbor[0] = (x + 1 < n) ? particles[n - 1][y][x + 1] : nullptr;
+			p1_neighbor[1] = (y + 1 < n && x + 1 < n) ? particles[n - 1][y + 1][x + 1] : nullptr;
+			p1_neighbor[2] = (y + 1 < n) ? particles[n - 1][y + 1][x] : nullptr;
+
+			if (p1_neighbor[0] && p1_neighbor[1] && p1_neighbor[2])
+			{
+				indices.push_back(index_map[p1]);
+				indices.push_back(index_map[p1_neighbor[1]]);
+				indices.push_back(index_map[p1_neighbor[0]]);
+				indices.push_back(index_map[p1]);
+				indices.push_back(index_map[p1_neighbor[2]]);
+				indices.push_back(index_map[p1_neighbor[1]]);
+			}
 		}
 	}
 
 	jelly->Initialize(particles, indices);
+
+	/*Set up Jelly constraints*/
+	// structural 
+	const float structural_rest_length = 2.f * half_width / static_cast<float>(n - 1);
+	const float bend_rest_length = 2 * structural_rest_length;
+	const float shear_rest_length = glm::sqrt(2.f) * structural_rest_length;
+
+	const float struct_stiffness = 0.025f;
+	const float struct_compliance = 0.0005f;
+
+	const float shear_stiffness = 0.025f;
+	const float shear_compliance = 0.0005f;
+
+	const float bend_stiffness = 0.025f;
+	const float bend_compliance = 0.0005f;
+	
+	for (unsigned int z = 0; z < n; z++)
+	{
+		for (unsigned int y = 0; y < n; y++)
+		{
+			for (unsigned int x = 0; x < n; x++)
+			{
+				GenerateStructuralSprings(
+					particles, 
+					x, y, z, 
+					structural_rest_length, 
+					struct_stiffness,
+					struct_compliance,
+					n);
+				GenerateShearSprings(
+					particles, 
+					x, y, z, 
+					shear_rest_length, 
+					shear_stiffness,
+					shear_compliance,
+					n);
+				GenerateBendSprings(particles, 
+					x, y, z, 
+					bend_rest_length, 
+					bend_stiffness,
+					bend_compliance,
+					n
+				);
+			}
+		}
+	}
+
 
 	return jelly;
 }
@@ -634,6 +728,114 @@ void GLFWApp::SetUpImGui()
 	ImGuiIO &io = ImGui::GetIO(); (void)io;
 	ImGui_ImplGlfwGL3_Init(m_window, false);
 	ImGui::StyleColorsDark();
+}
+
+void GLFWApp::GenerateStructuralSprings(
+	std::vector<std::vector<std::vector<Particle_Ptr>>>& particles,
+	unsigned int x, unsigned int y, unsigned int z,
+	const float spring_length,
+	const float stiffness,
+	const float compliance,
+	const unsigned int n)
+{
+	Particle_Ptr p0 = particles[z][y][x];
+	Particle_Ptr p1 = nullptr;
+	if (x + 1 < n)
+	{
+		p1 = particles[z][y][x + 1];
+		DistanceConstraint* spring = new DistanceConstraint(p0, p1, spring_length);
+		spring->setStiffness(stiffness);
+		spring->setCompliance(compliance);
+		m_simulator->AddStaticConstraint(spring);
+	}
+	if (y + 1 < n)
+	{
+		p1 = particles[z][y + 1][x];
+		DistanceConstraint* spring = new DistanceConstraint(p0, p1, spring_length);
+		spring->setStiffness(stiffness);
+		spring->setCompliance(compliance);
+		m_simulator->AddStaticConstraint(spring);
+	}
+	if (z + 1 < n)
+	{
+		p1 = particles[z + 1][y][x];
+		DistanceConstraint* spring = new DistanceConstraint(p0, p1, spring_length);
+		spring->setStiffness(stiffness);
+		spring->setCompliance(compliance);
+		m_simulator->AddStaticConstraint(spring);
+	}
+}
+
+void GLFWApp::GenerateShearSprings(
+	std::vector<std::vector<std::vector<Particle_Ptr>>>& particles, 
+	unsigned int x, unsigned int y, unsigned int z, 
+	const float spring_length, 
+	const float stiffness,
+	const float compliance,
+	const unsigned int n)
+{
+	Particle_Ptr p0 = particles[z][y][x];
+	Particle_Ptr p1 = nullptr;
+	if (x + 1 < n && y + 1 < n)
+	{
+		p1 = particles[z][y + 1][x + 1];
+		DistanceConstraint* spring = new DistanceConstraint(p0, p1, spring_length);
+		spring->setStiffness(stiffness);
+		spring->setCompliance(compliance);
+		m_simulator->AddStaticConstraint(spring);
+	}
+	if (y + 1 < n && z + 1 < n)
+	{
+		p1 = particles[z + 1][y + 1][x];
+		DistanceConstraint* spring = new DistanceConstraint(p0, p1, spring_length);
+		spring->setStiffness(stiffness);
+		spring->setCompliance(compliance);
+		m_simulator->AddStaticConstraint(spring);
+	}
+	if (z + 1 < n && x + 1 < n)
+	{
+		p1 = particles[z + 1][y][x + 1];
+		DistanceConstraint* spring = new DistanceConstraint(p0, p1, spring_length);
+		spring->setStiffness(stiffness);
+		spring->setCompliance(compliance);
+		m_simulator->AddStaticConstraint(spring);
+	}
+}
+
+void GLFWApp::GenerateBendSprings(
+	std::vector<std::vector<std::vector<Particle_Ptr>>>& particles, 
+	unsigned int x, unsigned int y, unsigned int z, 
+	const float spring_length, 
+	const float stiffness,
+	const float compliance, 
+	const unsigned int n)
+{
+	Particle_Ptr p0 = particles[z][y][x];
+	Particle_Ptr p1 = nullptr;
+	if (x + 2 < n)
+	{
+		p1 = particles[z][y][x + 2];
+		DistanceConstraint* spring = new DistanceConstraint(p0, p1, spring_length);
+		spring->setStiffness(stiffness);
+		spring->setCompliance(compliance);
+		m_simulator->AddStaticConstraint(spring);
+	}
+	if (y + 2 < n)
+	{
+		p1 = particles[z][y + 2][x];
+		DistanceConstraint* spring = new DistanceConstraint(p0, p1, spring_length);
+		spring->setStiffness(stiffness);
+		spring->setCompliance(compliance);
+		m_simulator->AddStaticConstraint(spring);
+	}
+	if (z + 2 < n)
+	{
+		p1 = particles[z + 2][y][x];
+		DistanceConstraint* spring = new DistanceConstraint(p0, p1, spring_length);
+		spring->setStiffness(stiffness);
+		spring->setCompliance(compliance);
+		m_simulator->AddStaticConstraint(spring);
+	}
 }
 
 void Frame_Status_GUI()

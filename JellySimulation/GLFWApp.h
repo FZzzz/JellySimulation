@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include <chrono>
+#include <unordered_map>
 #include "imgui/imgui.h"
 #include "GameObject.h"
 #include "ResourceManager.h"
@@ -30,7 +31,7 @@ public:
 	void ReleaseResources();
 	void SwitchMode();
 	//void CreateMonkeys(int num, OBJECT_FLAG_ENUM type);
-	std::shared_ptr<Jelly> GenerateJelly(unsigned int n, float mass);
+	std::shared_ptr<Jelly> GenerateJelly(unsigned int n, float mass, float half_width, glm::vec3 init_pos);
 
 	
 	static GLFWApp* getInstance() {
@@ -52,17 +53,42 @@ private:
 	
 	void Render();
 	void Update();
-
+	void SignalFail();
 	void SetUpImGui();
+	void GenerateStructuralSprings(
+		std::vector<std::vector<std::vector<Particle_Ptr>>>& particles,
+		unsigned int x, unsigned int y, unsigned int z,
+		const float spring_length,
+		const float stiffness,
+		const float compliance,
+		const unsigned int n);
+
+	void GenerateShearSprings(
+		std::vector<std::vector<std::vector<Particle_Ptr>>>& particles,
+		unsigned int x, unsigned int y, unsigned int z,
+		const float spring_length,
+		const float stiffness,
+		const float compliance,
+		const unsigned int n);
+
+	void GenerateBendSprings(
+		std::vector<std::vector<std::vector<Particle_Ptr>>>& particles,
+		unsigned int x, unsigned int y, unsigned int z,
+		const float spring_length,
+		const float stiffness,
+		const float compliance,
+		const unsigned int n);
+
+
+	static GLFWApp* appInstance;
 
 	GLFWwindow* m_window;
-	static GLFWApp* appInstance;
+	GLFWcursor* m_mouseCursors[ImGuiMouseCursor_COUNT];
+
 	double m_previousTime , m_currentTime , m_deltaTime;
 	int m_frames_proccessed;
 	char m_glsl_version[32];
-
-	GLFWcursor* m_mouseCursors[ImGuiMouseCursor_COUNT];
-
+	
 	/*Importer*/
 	std::shared_ptr<AssetImporter> m_importer;
 
@@ -86,8 +112,6 @@ private:
 	/*GUIs*/
 	//void Frame_Status_GUI();
 	//void Object_Viewer_GUI();
-
-	void SignalFail();
 
 	bool m_app_status;
 };

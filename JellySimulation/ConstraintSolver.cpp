@@ -14,7 +14,7 @@ bool ConstraintSolver::SolveConstraints(
 	std::vector<Constraint*>& static_constraints, 
 	std::vector<Constraint*>& collision_constraints)
 {
-	if (m_mode == PBD_MODE::ORIGINAL)
+	if (m_mode == PBD_MODE::PBD)
 		SolvePBDConstraints(static_constraints, collision_constraints);
 	else if (m_mode == PBD_MODE::XPBD)
 		SolveXPBDConstraints(dt, static_constraints, collision_constraints);

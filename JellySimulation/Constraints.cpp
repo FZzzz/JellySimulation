@@ -47,7 +47,7 @@ BendConstraint::~BendConstraint()
 {
 }
 
-DistanceConstraint::DistanceConstraint(Particle* p0, Particle* p1, float rest_length)
+DistanceConstraint::DistanceConstraint(Particle_Ptr p0, Particle_Ptr p1, float rest_length)
 	: Constraint(2), m_rest_length(rest_length)
 {
 	m_particles[0] = p0;

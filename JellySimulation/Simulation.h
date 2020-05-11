@@ -28,9 +28,10 @@ public:
 
 	void Initialize(PBD_MODE mode);
 	bool Step(float dt);
-	void AddParticle(Particle* particle);
+	void AddParticle(Particle_Ptr particle);
 	void AddCollider(Collider* collider);
 	void AddStaticConstraint(Constraint* constraint);
+	void AddStaticConstraints(std::vector<Constraint*> constraints);
 	void SetSolverIteration(uint32_t iter_count);
 
 	void Pause();
@@ -43,7 +44,7 @@ public:
 private:
 
 	void UpdatePhysics(float dt);
-	void CollisionDetection();
+	void CollisionDetection(float dt);
 	void HandleCollisionResponse();
 	void GenerateCollisionConstraint();
 	bool ProjectConstraints(const float &dt);
@@ -57,7 +58,7 @@ private:
 
 	std::shared_ptr<ConstraintSolver> m_solver;
 
-	std::vector<Particle*> m_particles;
+	std::vector<Particle_Ptr> m_particles;
 	std::vector<Collider*> m_colliders;
 	std::vector<Rigidbody*> m_rigidbodies;
 	std::vector<Constraint*> m_static_constraints;

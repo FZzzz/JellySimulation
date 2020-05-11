@@ -33,13 +33,14 @@ void Simulation::Initialize(PBD_MODE mode)
 bool Simulation::Step(float dt)
 {
 	if (!m_initialized)
-		Initialize(PBD_MODE::ORIGINAL);
+		Initialize(PBD_MODE::PBD);
 
 	if (m_pause)
 		return true;
 
 	UpdatePhysics(dt);
-	CollisionDetection();
+	CollisionDetection(dt);
+	HandleCollisionResponse();
 	GenerateCollisionConstraint();
 	
  	if (!ProjectConstraints(dt))
@@ -50,7 +51,7 @@ bool Simulation::Step(float dt)
 	return true;
 }
 
-void Simulation::AddParticle(Particle* particle)
+void Simulation::AddParticle(Particle_Ptr particle)
 {
 	m_particles.push_back(particle);
 }
@@ -64,6 +65,11 @@ void Simulation::AddCollider(Collider* collider)
 void Simulation::AddStaticConstraint(Constraint* constraint)
 {
 	m_static_constraints.push_back(constraint);
+}
+
+void Simulation::AddStaticConstraints(std::vector<Constraint*> constraints)
+{
+	m_static_constraints.insert(m_static_constraints.end(), constraints.begin(), constraints.end());
 }
 
 void Simulation::SetSolverIteration(uint32_t iter_count)
@@ -111,7 +117,7 @@ void Simulation::UpdatePhysics(float dt)
 
 }
 
-void Simulation::CollisionDetection()
+void Simulation::CollisionDetection(float dt)
 {	
 	// Clean previous CD result
 	for (auto vec : m_collision_table)
@@ -127,7 +133,7 @@ void Simulation::CollisionDetection()
 		{
 			/* If collided with other, then apply collision handling directly */
 			if (m_particles[i]->TestCollision(m_colliders[j]))
-				m_particles[i]->OnCollision(m_colliders[j]);
+				m_particles[i]->OnCollision(m_colliders[j], dt);
 		}
 	}
 
@@ -189,9 +195,11 @@ void Simulation::ApplySolverResults(float dt)
 		p->Update(dt);
 	}
 	
+#if _DEBUG	
 	std::cout << m_particles[0]->m_data->position.x << " "
 		<< m_particles[1]->m_data->position.x << std::endl;
-	
+#endif
+
 /*
 #ifdef _DEBUG
 	{

@@ -39,7 +39,7 @@ public:
 	 * Constraint caches particles but not owning it
 	 * TODO: Rewrite this (Not generic solution) 
 	 */
-	std::vector<Particle*> m_particles;
+	std::vector<Particle_Ptr> m_particles;
 	float m_lambda;
 
 	// stiffness is the value between 0-1
@@ -63,7 +63,7 @@ public:
 	 * @param p2 Second paritcle
 	 * @param d  Rest length of two particle
 	 */
-	DistanceConstraint(Particle* p0, Particle* p1, float rest_length);
+	DistanceConstraint(Particle_Ptr p0, Particle_Ptr p1, float rest_length);
 	~DistanceConstraint();
 
 	virtual bool SolvePBDConstraint();

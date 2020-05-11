@@ -68,13 +68,13 @@ bool Particle::TestCollision(Collider* other)
 	return result;
 }
 
-void Particle::OnCollision(Collider* other)
+void Particle::OnCollision(Collider* other, const float& dt)
 {
 	/* Collision response variables */
 	glm::vec3 normal;
 	glm::vec3 v_r;
 	
-	   
+	/**/
 	switch (other->getColliderTypes())
 	{
 	case Collider::ColliderTypes::SPHERE: 
@@ -83,11 +83,11 @@ void Particle::OnCollision(Collider* other)
 		normal = m_data->new_position - sphere->m_center;
 
 		if (glm::dot(normal, normal) == 0)
-			v_r = m_data->velocity;
+			v_r = -m_data->velocity;
 		else
 		{
 			normal = glm::normalize(normal);
-			v_r = m_data->velocity - 2 * glm::dot(v_r, normal) * normal;
+			v_r = m_data->velocity + 2.f * glm::dot(v_r, normal) * normal;
 		}
 		break;
 	}
@@ -124,9 +124,9 @@ void Particle::OnCollision(Collider* other)
 			if (min_dist < diff2min[i])
 				min_dist = diff2min[i], normal = normal_preset[3 + i];
 		}
-
-		v_r = m_data->velocity - 2 * glm::dot(v_r, normal) * normal;
-		m_data->new_velocity = v_r;
+		glm::vec3 tmp = glm::dot(m_data->velocity, normal) * normal;
+		v_r = m_data->velocity - 2.f * glm::dot(m_data->velocity, normal) * normal;
+		m_data->velocity = v_r;
 
 		break;
 	}
@@ -143,10 +143,14 @@ void Particle::OnCollision(Collider* other)
 	{
 		PlaneCollider* plane = dynamic_cast<PlaneCollider*>(other);
 		normal = plane->m_normal;
-		v_r = m_data->velocity - 2 * glm::dot(v_r, normal) * normal;
-		m_data->new_velocity = v_r;
+		glm::vec3 tmp = glm::dot(m_data->velocity, normal) * normal;
+		v_r = m_data->velocity - 2.f * glm::dot(m_data->velocity, normal) * normal;
+		m_data->velocity = v_r;
 
 		break;
 	}
 	}
+
+	/*Re-prediction*/
+	m_data->new_position = m_data->position + dt * m_data->velocity;
 }

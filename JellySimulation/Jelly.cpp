@@ -4,6 +4,7 @@
 
 
 Jelly::Jelly()
+	:m_num_of_particles(0)
 {
 }
 
@@ -14,7 +15,8 @@ Jelly::~Jelly()
 
 void Jelly::Update()
 {
-	/*Test particle move*/
+	/*Particle move test*/
+	/*
 	size_t jelly_dim = m_particles.size();
 	for (size_t i = 0; i < jelly_dim; ++i)
 	{
@@ -31,10 +33,8 @@ void Jelly::Update()
 			}
 		}
 	}
-	UpdateVBO();
-	/*
-		Simulate Physics
 	*/
+	UpdateVBO();
 }
 
 void Jelly::Initialize(std::vector<std::vector<std::vector<Particle_Ptr>>>& particles, std::vector<unsigned int> indices)
@@ -57,7 +57,7 @@ void Jelly::setParticles(std::vector<std::vector<std::vector<Particle_Ptr>>>& pa
 {
 	// n^3 particles
 	m_num_of_particles = particles.size() * particles.size() * particles.size();
-	m_particles = std::move(particles);
+	m_particles = particles;
 	m_positions.resize(m_num_of_particles);
 	/*Update member particle positions*/
 	UpdateParticlePositions();
