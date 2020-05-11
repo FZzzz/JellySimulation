@@ -11,12 +11,15 @@ energy potentials in an implicit manner.
 
 In this project (code), I provided a simple demostration of how PBD works. With this friendly(?) interface, it should be very easy to create applications based on PBD/XPBD.
 
+## Build
+Click on `JellySimulation.sln` and build it in Visual Studio (2019 is prefered). 
+
 ## Background - Position-based dynamics
 In PBD, each constraints updates its position with
 
 ![\Delta x = k_js_jM^{-1}\nabla C_j(x_i)](https://render.githubusercontent.com/render/math?math=%5CDelta%20x%20%3D%20k_js_jM%5E%7B-1%7D%5Cnabla%20C_j(x_i)),
 
-where $i$ denotes the iteration index, $j$ is the constraint index, and $k \in[0,1]$. And $s_j$ is the scalaring factor that
+where ![i](https://render.githubusercontent.com/render/math?math=i) denotes the iteration index, ![j](https://render.githubusercontent.com/render/math?math=j) is the constraint index, and ![k \in\[0,1\]](https://render.githubusercontent.com/render/math?math=k%20%5Cin%5B0%2C1%5D). And ![s_j](https://render.githubusercontent.com/render/math?math=s_j) is the scalaring factor that
 
 ![s_j = \dfrac{-C_j(x_i)}{\nabla C_j M^{-1} \nabla C_j^T}](https://render.githubusercontent.com/render/math?math=s_j%20%3D%20%5Cdfrac%7B-C_j(x_i)%7D%7B%5Cnabla%20C_j%20M%5E%7B-1%7D%20%5Cnabla%20C_j%5ET%7D)
 
@@ -34,7 +37,7 @@ where $i$ denotes the iteration index, $j$ is the constraint index, and $k \in[0
 In contrast, XPBD uses Lagrangian rather than throw away that value. It is accumulated in a per-constraint variable ![\lambda](https://render.githubusercontent.com/render/math?math=%5Clambda).
 
 **XPBD algorithm**
-1. Predict position $x_{predict}$ with velocity $v$ and external forces ![f_{ext}](https://render.githubusercontent.com/render/math?math=f_%7Bext%7D)
+1. Predict position![x_{predict}](https://render.githubusercontent.com/render/math?math=x_%7Bpredict%7D) with velocity $v$ and external forces ![f_{ext}](https://render.githubusercontent.com/render/math?math=f_%7Bext%7D)
 2. Initialize ![x_0](https://render.githubusercontent.com/render/math?math=x_0)
 3. **Initialize ![\lambda_0 = 0](https://render.githubusercontent.com/render/math?math=%5Clambda_0%20%3D%200)**
 4. While ![i < iterationCount](https://render.githubusercontent.com/render/math?math=i%20%3C%20iterationCount)
