@@ -14,37 +14,37 @@ In this project (code), I provided a simple demostration of how PBD works. With 
 ## Background - Position-based dynamics
 In PBD, each constraints updates its position with
 
-$\Delta x = k_js_jM^{-1}\nabla C_j(x_i)$,
+![\Delta x = k_js_jM^{-1}\nabla C_j(x_i)](https://render.githubusercontent.com/render/math?math=%5CDelta%20x%20%3D%20k_js_jM%5E%7B-1%7D%5Cnabla%20C_j(x_i)),
 
 where $i$ denotes the iteration index, $j$ is the constraint index, and $k \in[0,1]$. And $s_j$ is the scalaring factor that
 
-$s_j = \dfrac{-C_j(x_i)}{\nabla C_j M^{-1} \nabla C_j^T}$
+![s_j = \dfrac{-C_j(x_i)}{\nabla C_j M^{-1} \nabla C_j^T}](https://render.githubusercontent.com/render/math?math=s_j%20%3D%20%5Cdfrac%7B-C_j(x_i)%7D%7B%5Cnabla%20C_j%20M%5E%7B-1%7D%20%5Cnabla%20C_j%5ET%7D)
 
 
 **Original PBD algorithm**
-1. Predict position with velocity $v$ and external forces $f_{ext}$
-2. Initialize $x_0$ 
-3. while $i<iterationCount$
-    - Compute $\Delta x$
-    - Update $\Delta x$
+1. Predict position with velocity $v$ and external forces ![f_{ext}](https://render.githubusercontent.com/render/math?math=f_%7Bext%7D)
+2. Initialize ![x_0](https://render.githubusercontent.com/render/math?math=x_0)
+3. while ![i < iterationCount](https://render.githubusercontent.com/render/math?math=i%20%3C%20iterationCount)
+    - Compute ![\Delta x](https://render.githubusercontent.com/render/math?math=%5CDelta%20x)
+    - Update![\Delta x](https://render.githubusercontent.com/render/math?math=%5CDelta%20x)
 4. Update positions
 5. Update velocities 
-    - $v_{n+1} = \frac{1}{\Delta t}(x_{n+1} - x_{n})$ 
+    - ![v_{n+1} = \frac{1}{\Delta t}(x_{n+1} - x_{n})](https://render.githubusercontent.com/render/math?math=v_%7Bn%2B1%7D%20%3D%20%5Cfrac%7B1%7D%7B%5CDelta%20t%7D(x_%7Bn%2B1%7D%20-%20x_%7Bn%7D))
 
-In contrast, XPBD uses Lagrangian rather than throw away that value. It is accumulated in a per-constraint variable $\lambda$.
+In contrast, XPBD uses Lagrangian rather than throw away that value. It is accumulated in a per-constraint variable ![\lambda](https://render.githubusercontent.com/render/math?math=%5Clambda).
 
 **XPBD algorithm**
-1. Predict position $x_{predict}$ with velocity $v$ and external forces $f_{ext}$
-2. Initialize $x_0 = x_{predict}$ 
-3. **Initialize $\lambda_0 = 0$**
-4. While $i<iterationCount$
-    - Compute $\Delta x$
-    - **Compute $\Delta \lambda$**
-    - Update $x = x + \Delta x$
-    - **Update $\lambda = \lambda + \Delta \lambda$**
+1. Predict position $x_{predict}$ with velocity $v$ and external forces ![f_{ext}](https://render.githubusercontent.com/render/math?math=f_%7Bext%7D)
+2. Initialize ![x_0](https://render.githubusercontent.com/render/math?math=x_0)
+3. **Initialize ![\lambda_0 = 0](https://render.githubusercontent.com/render/math?math=%5Clambda_0%20%3D%200)**
+4. While ![i < iterationCount](https://render.githubusercontent.com/render/math?math=i%20%3C%20iterationCount)
+    - Compute ![\Delta x](https://render.githubusercontent.com/render/math?math=%5CDelta%20x)
+    - **Compute ![\Delta \lambda](https://render.githubusercontent.com/render/math?math=%5CDelta%20%5Clambda)**
+    - Update ![x = x + \Delta x](https://render.githubusercontent.com/render/math?math=x%20%3D%20x%20%2B%20%5CDelta%20x)
+    - **Update ![\lambda = \lambda + \Delta \lambda](https://render.githubusercontent.com/render/math?math=%5Clambda%20%3D%20%5Clambda%20%2B%20%5CDelta%20%5Clambda)**
 5. Update positions
 6. Update velocities 
-    - $v_{n+1} = \frac{1}{\Delta t}(x_{n+1} - x_{n})$ 
+    - ![v_{n+1} = \frac{1}{\Delta t}(x_{n+1} - x_{n})](https://render.githubusercontent.com/render/math?math=v_%7Bn%2B1%7D%20%3D%20%5Cfrac%7B1%7D%7B%5CDelta%20t%7D(x_%7Bn%2B1%7D%20-%20x_%7Bn%7D))
 
 
 
