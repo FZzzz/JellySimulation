@@ -14,6 +14,13 @@ In this project (code), I provided a simple demostration of how PBD works. With 
 ## Build
 Click on `JellySimulation.sln` and build it in Visual Studio (2019 is prefered). 
 
+## Dependency
+
+* OpenGL 3.2+
+* Assimp 4.1
+* GLM
+* GLFW
+
 ## Background - Position-based dynamics
 In PBD, each constraints updates its position with
 
@@ -52,6 +59,15 @@ In contrast, XPBD uses Lagrangian rather than throw away that value. It is accum
 
 
 ## Experiment Result 
+
+**Environment**
+CPU: Intel® Xeon® Processor E3-1231 v3
+GPU: Nvidia GeForce GTX 1070
+RAM: 16 GB
+OS: Windows 10 pro, 64-bit
+
+
+
 **PBD**
 
 ![](https://i.imgur.com/3OfJ97m.gif)
