@@ -129,6 +129,11 @@ void ResourceManager::AddJelly(std::shared_ptr<Jelly> jelly)
 	m_jellies.push_back(jelly);
 }
 
+void ResourceManager::SetParticles(std::vector<Particle_Ptr> particles)
+{
+	m_particles = particles;
+}
+
 void ResourceManager::GenerateParticle(glm::vec3 pos, float mass)
 {
 	auto particle = std::make_shared<Particle>(pos, mass);

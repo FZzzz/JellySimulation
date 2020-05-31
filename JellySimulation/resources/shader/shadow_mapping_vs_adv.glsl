@@ -10,8 +10,6 @@ layout (std140) uniform Matrices
     mat4 lightSpaceMatrix;
 };
 
-out vec2 TexCoords;
-
 out VS_OUT {
     vec3 FragPos;
     vec2 TexCoords;

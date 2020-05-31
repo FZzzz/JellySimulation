@@ -53,6 +53,8 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 	const float f_width = static_cast<float>(width);
 	const float f_height = static_cast<float>(height);
 
+	srand(time(NULL));
+
 	if (!glfwInit())
 	{
 		return false;
@@ -76,7 +78,7 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 	glfwSetWindowPos(m_window, 100, 100);
 	glfwMakeContextCurrent(m_window);
 	glfwSetKeyCallback(m_window, Key_callback);
-	glfwSwapInterval(1);
+	glfwSwapInterval(0);
 
 	// Initialize glew
 	glewExperimental = true;
@@ -89,6 +91,8 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_MULTISAMPLE);
 	glEnable(GL_BLEND);
+	glEnable(GL_PROGRAM_POINT_SIZE);
+	glEnable(GL_POINT_SPRITE); 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	/* ResourceManager Creation */
@@ -96,15 +100,19 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 
 	/* Simulator creation */
 	m_simulator = std::make_shared<Simulation>();
-	m_simulator->Initialize(PBD_MODE::PBD);
-	m_simulator->SetSolverIteration(5);
+	m_simulator->Initialize(PBD_MODE::XPBD);
+	m_simulator->SetSolverIteration(1);
 	
 	// ShowdowMapping shader settings
-	std::shared_ptr<Shader> shader = std::make_shared<Shader>("ShadowMapping");
-	shader->SetupShader("resources/shader/shadow_mapping_vs_adv.glsl",
+	std::shared_ptr<Shader> shadow_mapping_shader = std::make_shared<Shader>("ShadowMapping");
+	shadow_mapping_shader->SetupShader("resources/shader/shadow_mapping_vs_adv.glsl",
 		"resources/shader/shadow_mapping_fs.glsl");
 	
-	auto mat_uniform = glGetUniformBlockIndex(shader->getProgram(), "Matrices");
+	std::shared_ptr<Shader> point_shader = std::make_shared<Shader>("PointSprite");
+	point_shader->SetupShader("resources/shader/point_sprite_vs.glsl", 
+		"resources/shader/point_sprite_fs.glsl");
+
+	auto mat_uniform = glGetUniformBlockIndex(shadow_mapping_shader->getProgram(), "Matrices");
 	GLuint ubo;
 	glGenBuffers(1, &ubo);
 	glBindBuffer(GL_UNIFORM_BUFFER, ubo);
@@ -157,7 +165,7 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 	{
 		//default mesh
 		auto load_status = IMPORT_STATUS::IMPORT_FAILED;
-		auto mesh = m_importer->LoadMesh("resources/models/monkey.obj", shader, load_status);
+		auto mesh = m_importer->LoadMesh("resources/models/monkey.obj", shadow_mapping_shader, load_status);
 		// Original
 		/* 
 		bool load_status = false;
@@ -175,7 +183,7 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 	// cube mesh generation for keycall_back and resource management test
 	{
 		auto load_status = IMPORT_STATUS::IMPORT_FAILED;
-		auto mesh = m_importer->LoadMesh("resources/models/monkey.obj", shader, load_status);
+		auto mesh = m_importer->LoadMesh("resources/models/monkey.obj", shadow_mapping_shader, load_status);
 		if (load_status == IMPORT_STATUS::IMPORT_FAILED)
 		{
 			std::cout << "Load Failed\n";
@@ -186,7 +194,7 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 	// Joint
 	{
 		auto load_status = IMPORT_STATUS::IMPORT_FAILED;
-		auto mesh = m_importer->LoadMesh("resources/models/sphere_s.obj", shader, load_status);
+		auto mesh = m_importer->LoadMesh("resources/models/sphere_s.obj", shadow_mapping_shader, load_status);
 		if (load_status == IMPORT_STATUS::IMPORT_FAILED)
 		{
 			std::cout << "Load Failed\n";
@@ -197,7 +205,7 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 	// Bone Primitive
 	{
 		auto load_status = IMPORT_STATUS::IMPORT_FAILED;
-		auto mesh = m_importer->LoadMesh("resources/models/bone_n.obj", shader, load_status);
+		auto mesh = m_importer->LoadMesh("resources/models/bone_n.obj", shadow_mapping_shader, load_status);
 
 		if (load_status == IMPORT_STATUS::IMPORT_FAILED)
 		{
@@ -210,24 +218,24 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 	// Terrain Initilization
 	{
 		std::shared_ptr<Floor> plane_terrain = std::make_shared<Floor>();
-		plane_terrain->Initialize(glm::vec3(0, 0, 0), shader);
+		plane_terrain->Initialize(glm::vec3(0, 0, 0), shadow_mapping_shader);
 		m_resource_manager->AddGameObject(std::move(static_cast<std::shared_ptr<GameObject>>(plane_terrain)));
 		m_simulator->AddCollider(plane_terrain->getCollider());
 	}
-
 	// Jelly intialization
 	{
 		constexpr unsigned int jelly_dim = 8;
-		const float particle_mass = 0.05f;
-		const float half_width = 5.f;
-		const glm::vec3 init_pos(0, 30.f, 0);
+		const float particle_mass = 0.1f;
+		const float half_width = 5.0f;
+		const glm::vec3 init_pos(0, 50.f, 0);
 		std::shared_ptr<Jelly> jelly = GenerateJelly(jelly_dim, particle_mass, half_width, init_pos);
 #ifdef _DEBUG
 		assert(jelly != nullptr);
 #endif
 		m_resource_manager->AddJelly(jelly);
 	}
-
+	
+	GenerateRadomParticles();
 	// Set colliders
 	{
 		/*
@@ -521,17 +529,17 @@ std::shared_ptr<Jelly> GLFWApp::GenerateJelly(unsigned int n, float mass, float 
 	/*Set up Jelly constraints*/
 	// structural 
 	const float structural_rest_length = 2.f * half_width / static_cast<float>(n - 1);
-	const float bend_rest_length = 2 * structural_rest_length;
+	const float bend_rest_length = 2.f * structural_rest_length;
 	const float shear_rest_length = glm::sqrt(2.f) * structural_rest_length;
 
-	const float struct_stiffness = 0.025f;
+	const float struct_stiffness = 0.05f;
 	const float struct_compliance = 0.0005f;
 
 	const float shear_stiffness = 0.025f;
-	const float shear_compliance = 0.0005f;
+	const float shear_compliance = 0.001f;
 
 	const float bend_stiffness = 0.025f;
-	const float bend_compliance = 0.0005f;
+	const float bend_compliance = 0.001f;
 	
 	for (unsigned int z = 0; z < n; z++)
 	{
@@ -604,35 +612,10 @@ void Key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			break;
 		}
 
-		case GLFW_KEY_G:
-		{
-			static int name_count = 0;
-			static std::string name_pattern = "Object";
-			//test add gameobject
-			for (int i = 0; i < 10000; ++i)
-			{
-				
-				float x = static_cast<float>(rand() % 10);
-				float y = static_cast<float>(rand() % 10);
-				float z = static_cast<float>(rand() % 10);
-				
-				std::shared_ptr<GameObject> obj = std::make_shared<Cube>();
-
-				obj->Initialize(glm::vec3(x,y,z));
-				obj->setName(name_pattern + std::to_string(name_count));
-				obj->m_transform.m_translation = glm::vec3(x, y, z);
-
-				instance->getResourceManager()->AddGameObject(std::move(obj));
-				name_count++;
-			}
-			break;
-		}
-
 		case GLFW_KEY_SPACE:
 		{
 			auto simulator = instance->getSimulator();
 			simulator->Pause();
-			//simulator->Step(0.0001f);
 			break;
 		}
 		
@@ -837,6 +820,28 @@ void GLFWApp::GenerateBendSprings(
 		m_simulator->AddStaticConstraint(spring);
 	}
 }
+
+void GLFWApp::GenerateRadomParticles()
+{
+	float x, y, z;
+	std::vector<Particle_Ptr> particles;
+
+	for (int i = 0; i < 1000; ++i)
+	{
+		x = static_cast<float>(rand() % 1000) / 500.f;
+		y = static_cast<float>(rand() % 1000) / 200.f;
+		z = static_cast<float>(rand() % 1000) / 100.f;
+		auto particle = std::make_shared<Particle>(glm::vec3(x,y,0.f), 0.1f);
+		particles.push_back(particle);
+	}
+
+	m_resource_manager->SetParticles(particles);
+	m_renderer->SetupParticleGLBuffers(particles);
+}
+
+/*
+ * GUI functions
+ */
 
 void Frame_Status_GUI()
 {

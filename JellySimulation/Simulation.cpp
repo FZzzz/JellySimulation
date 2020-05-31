@@ -97,7 +97,7 @@ void Simulation::UpdatePhysics(float dt)
 	for (auto p : m_particles)
 	{
 		// external forces
-		p->m_data->force = glm::vec3(0, m_world_desc.gravity, 0);
+		p->m_data->force = p->m_data->mass * glm::vec3(0, m_world_desc.gravity, 0);
 
 		p->m_data->velocity = p->m_data->velocity + dt * p->m_data->massInv * p->m_data->force;
 		
@@ -194,12 +194,12 @@ void Simulation::ApplySolverResults(float dt)
 	{
 		p->Update(dt);
 	}
-	
+/*
 #if _DEBUG	
 	std::cout << m_particles[0]->m_data->position.x << " "
 		<< m_particles[1]->m_data->position.x << std::endl;
 #endif
-
+*/
 /*
 #ifdef _DEBUG
 	{

@@ -79,6 +79,7 @@ private:
 		const float compliance,
 		const unsigned int n);
 
+	void GenerateRadomParticles();
 
 	static GLFWApp* appInstance;
 

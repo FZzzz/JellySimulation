@@ -113,7 +113,7 @@ void Renderer::Render()
 	RenderSceneDepth();
 	if (!renderQuad)
 	{
-		RenderSceneWithShadowMap();
+		RenderShadowMappedScene();
 	}
 	else
 	{
@@ -155,6 +155,7 @@ void Renderer::RenderSceneDepth()
 	{
 		if (jelly->getJellyMesh())
 		{
+			jelly->getJellyMesh()->getShader()->Use();
 			// jelly's position is operated by vertex position;
 			RenderDepth(jelly->getJellyMesh(), Transform());
 		}
@@ -164,19 +165,38 @@ void Renderer::RenderSceneDepth()
 
 }
 
-void Renderer::RenderSceneWithShadowMap()
+void Renderer::RenderShadowMappedScene()
 {
 	// 2. then render scene as normal with shadow mapping (using depth map)
 	glViewport(0, 0, m_screenWidth, m_screenHeight);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//ConfigureShaderAndMatrices();
-	
 	RenderScene();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Renderer::RenderParticles()
+void Renderer::RenderParticles(const std::vector<Particle_Ptr> &particles)
 {
+	if (!m_mainCamera)
+		return;
+
+	auto shader = m_resource_manager->FindShaderByName("PointSprite");
+	shader->Use();
+
+	const glm::mat4 pvm = m_mainCamera->m_cameraMat * glm::mat4(1);
+	shader->SetUniformMat4("pvm", pvm);
+	shader->SetUniformFloat("point_size", 5.f);
+	shader->SetUniformVec3("light_pos", m_mainCamera->m_position);
+	shader->SetUniformMat4("view", m_mainCamera->m_lookAt);
+	glBindVertexArray(m_particles_VAO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_particles_EBO);
+	glDrawElements(
+		GL_POINTS,
+		static_cast<unsigned int>(particles.size()),
+		GL_UNSIGNED_INT,
+		0
+	);
+	glBindVertexArray(0);
 }
 
 void Renderer::RenderQuad()
@@ -219,11 +239,13 @@ void Renderer::RenderQuad()
 
 void Renderer::RenderScene()
 {
+	auto particles = m_resource_manager->getParticles();
+	
 	//auto t1 = std::chrono::high_resolution_clock::now();
 	const std::vector<std::shared_ptr<GameObject>>& objects = m_resource_manager->getObjects();
 	
-	/*Render Jelly*/
 	auto jellies = m_resource_manager->getJellies();
+	
 	
 	// For each shader program we call object->render()
 	// Our render will automatically arrange the shader->objects map
@@ -235,18 +257,21 @@ void Renderer::RenderScene()
 		shader->Use();
 		for (auto obj_it = obj_vec.cbegin(); obj_it != obj_vec.cend(); ++obj_it)
 		{
-			RenderObject(shader, (*obj_it)->getMesh(), (*obj_it)->m_transform);
-		}
-
-		for (auto jelly : jellies)
-		{
-			if (jelly->getJellyMesh())
-			{
-				// jelly's position is operated by vertex position;
-				RenderDepth(jelly->getJellyMesh(), Transform());
-			}
+			RenderShadowMappingObject(shader, (*obj_it)->getMesh(), (*obj_it)->m_transform);
 		}
 	}
+
+	for (auto jelly : jellies)
+	{
+		if (jelly->getJellyMesh())
+		{
+			// jelly's position is operated by vertex position;
+			RenderShadowMappingObject(jelly->getJellyMesh()->getShader(), jelly->getJellyMesh(), Transform());
+		}
+	}
+	
+	
+	RenderParticles(particles);
 	/*
 	// The above code equals to the below one
 	for (i = 0; i < objects.size(); i++)
@@ -260,7 +285,7 @@ void Renderer::RenderScene()
 
 }
 
-void Renderer::RenderObject(const std::shared_ptr<Shader>& shader, 
+void Renderer::RenderShadowMappingObject(const std::shared_ptr<Shader>& shader, 
 							const std::shared_ptr<Mesh>& mesh , 
 							const Transform& transform)
 {
@@ -272,17 +297,10 @@ void Renderer::RenderObject(const std::shared_ptr<Shader>& shader,
 		std::cout << "No Mesh to Render\n";
 		return;
 	}
-	mesh->Render();
+	//mesh->Render();
 
 	//shadow mapping shader
-	//const auto& shader_program = mesh->getShaderProgram();
-	//const auto& shader = mesh->getShader();
-		
-	//auto t1 = std::chrono::high_resolution_clock::now();
-	//const glm::mat4& pvm = m_mainCamera->projection * m_mainCamera->lookAt * transform.getModelMatWorld();
 	const glm::mat4 pvm = m_mainCamera->m_cameraMat * transform.getModelMatWorld();
-	//auto t2 = std::chrono::high_resolution_clock::now();
-	//std::cout << (t2 - t1).count() << "\n";
 	//shader->SetUniformMat4("pvm", pvm);
 	shader->SetUniformMat4("modelMat", transform.getModelMatWorld());
 	//shader->SetUniformMat4("lightSpaceMatrix", light_mat);
@@ -385,3 +403,46 @@ void Renderer::SetMainCamera(std::shared_ptr<Camera> camera)
 {
 	m_mainCamera = camera;
 }
+
+void Renderer::SetupParticleGLBuffers(const std::vector<Particle_Ptr>& particles)
+{
+	std::vector<glm::vec3> positions;
+	for (auto particle : particles)
+	{
+		positions.push_back(particle->m_data->position);
+	}
+
+	auto shader = m_resource_manager->FindShaderByName("PointSprite");
+	shader->Use();
+	glGenVertexArrays(1, &m_particles_VAO);
+	glGenBuffers(1, &m_particles_VBO);
+	glGenBuffers(1, &m_particles_EBO);
+
+	// Update VBOs
+	glBindVertexArray(m_particles_VAO);
+
+	//upload vertices position to GPU
+	if (particles.size() > 0)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, m_particles_VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * positions.size(),
+			positions.data(), GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	}
+
+	std::vector<GLuint> indices;
+	//setup indices info
+	for (GLuint i = 0; i < particles.size(); ++i)
+	{
+		indices.push_back(i);
+	}
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_particles_EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * particles.size(),
+		indices.data(), GL_STATIC_DRAW);
+
+	glBindVertexArray(0);
+
+}
+

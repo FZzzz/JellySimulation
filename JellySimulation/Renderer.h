@@ -30,6 +30,7 @@ public:
 	void Render();
 	
 	void SetMainCamera(std::shared_ptr<Camera> camera);
+	void SetupParticleGLBuffers(const std::vector<Particle_Ptr>& particles);
 
 	bool renderQuad = false;
 
@@ -41,16 +42,16 @@ private:
 	void RenderScene();
 	//void RenderStaticObject();
 	//void RenderInstancedObject();
-	void RenderObject(
+	void RenderShadowMappingObject(
 		const std::shared_ptr<Shader>& shader,
 		const std::shared_ptr<Mesh>& mesh, 
 		const Transform& transform);
 	void RenderInstancedObject(const std::shared_ptr<Mesh>& mesh, const Transform& transform);
 	void RenderDepth(const std::shared_ptr<Mesh>& mesh, const Transform& transform);
 	void RenderSceneDepth();
-	void RenderSceneWithShadowMap();
+	void RenderShadowMappedScene();
 
-	void RenderParticles();
+	void RenderParticles(const std::vector<Particle_Ptr>& particles);
 
 	void RenderQuad();
 
@@ -70,6 +71,11 @@ private:
 	GLuint m_indirect_VAO;
 	GLuint m_indirect_VBO;
 	GLuint m_indirect_EBO;
+
+	GLuint m_particles_VAO;
+	GLuint m_particles_VBO;
+	GLuint m_particles_EBO;
+
 		
 	
 	

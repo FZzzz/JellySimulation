@@ -50,7 +50,6 @@ void Jelly::Initialize(std::vector<std::vector<std::vector<Particle_Ptr>>>& part
 	m_jelly_mesh->setIndices(indices);
 	m_jelly_mesh->SetupGLBuffers();
 	
-	
 }
 
 void Jelly::setParticles(std::vector<std::vector<std::vector<Particle_Ptr>>>& particles)

@@ -2,7 +2,7 @@
 #include <assert.h>
 #include "Constraints.h"
 
-#define EPSILON 0.0000000001f 
+#define EPSILON 0.000000000000001f 
 
 Constraint::Constraint(size_t numOfRigidbodies)
 	: m_lambda(0.f), m_stiffness(1.f), m_compliance(0.f), m_compliance_tmp(0.f)

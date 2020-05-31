@@ -60,7 +60,7 @@ void main()
     vec3 fdx = dFdx(fs_in.FragPos);
     vec3 fdy = dFdy(fs_in.FragPos);
     vec3 normal = normalize(cross(fdx, fdy));
-    vec3 lightColor = vec3(1);
+    vec3 lightColor = vec3(1.f);
     // ambient
     vec3 ambient = 0.1 * color;
     // diffuse

@@ -40,6 +40,7 @@ public:
 	void AddShader(std::shared_ptr<Shader>& shader);
 	void AddAnimCharacter(std::shared_ptr<AnimCharacter> anim_character);
 	void AddJelly(std::shared_ptr<Jelly> jelly);
+	void SetParticles(std::vector<Particle_Ptr> particles);
 	void GenerateParticle(glm::vec3 pos, float mass);
 
 	std::shared_ptr<Mesh> FindMeshByName(std::string name);
@@ -54,6 +55,7 @@ public:
 	inline const std::vector<std::shared_ptr<Shader>>& getShaders() { return m_shader_vec; };
 	inline const std::vector<std::shared_ptr<AnimCharacter>>& getAnimCharacters() { return m_anim_character_vec; };
 	inline const std::vector<std::shared_ptr<Jelly>>& getJellies() { return m_jellies; };
+	inline const std::vector<Particle_Ptr>& getParticles() { return m_particles; };
 	//inline const std::shared_ptr<SimCharacter> getSimCharacter() { return m_sim_character; };
 
 
