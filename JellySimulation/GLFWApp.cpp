@@ -235,7 +235,7 @@ bool GLFWApp::Initialize(int width , int height , const std::string &title)
 		m_resource_manager->AddJelly(jelly);
 	}
 	
-	GenerateRadomParticles();
+	//GenerateRadomParticles();
 	// Set colliders
 	{
 		/*
