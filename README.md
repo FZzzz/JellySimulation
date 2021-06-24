@@ -9,8 +9,6 @@ This project references to the famous [Position based dynamics (PBD)](https://ma
 To address these problem, [XPBD](http://mmacklin.com/xpbd.pdf) is introduced by Miles Macklin and his fellows. Unlike original PBD, XPBD allows users to accurately and efficiently simulate arbitrary elastic and dissipative
 energy potentials in an implicit manner.
 
-In this project (code), I provided a simple demostration of how PBD works. With this friendly(?) interface, it should be very easy to create applications based on PBD/XPBD.
-
 ## Build
 Click on `JellySimulation.sln` and build it in Visual Studio (2019 is prefered). 
 
@@ -61,10 +59,10 @@ In contrast, XPBD uses Lagrangian rather than throw away that value. It is accum
 ## Experiment Result 
 
 **Environment**
-CPU: Intel® Xeon® Processor E3-1231 v3
-GPU: Nvidia GeForce GTX 1070
-RAM: 16 GB
-OS: Windows 10 pro, 64-bit
+* CPU: Intel® Xeon® Processor E3-1231 v3
+* GPU: Nvidia GeForce GTX 1070
+* RAM: 16 GB
+* OS: Windows 10 pro, 64-bit
 
 
 
@@ -76,10 +74,10 @@ OS: Windows 10 pro, 64-bit
 
 ![](https://i.imgur.com/CgO8adS.gif)
 
-* stiffness setting 
+* Stiffness settings
     * PBD stiffness: 0.025
         * The value of PBD stiffness locates between 0 to 1
-    * XPBD compliance: 0.0005    
+    * XPBD compliance: 0.0005 (m/N)
     * **Notice**: PBD and XPBD stiffness is very hard to compare (not in the same unit) because PBD stiffness is **relative** stiffness.
 
 ## References
